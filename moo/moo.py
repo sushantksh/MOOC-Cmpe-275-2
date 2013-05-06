@@ -209,7 +209,7 @@ def getCategory(id):
 # List Category
 #
 @route('/category/list', method='GET')
-def listCourse():
+def listCategory():
     print "List category moo.py"
     return room.listCategory()
 
