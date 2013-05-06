@@ -14,6 +14,8 @@ from pymongo import Connection
 
 #localtime = time.asctime( time.localtime(time.time()))
 #print "Local current time :", localtime
+# Needs a Date Type like this  2013-04-18T08:56:20.583Z" // ISO format
+
 class Storage(object):
     def __init__(self):
         # initialize our storage, data is a placeholder
@@ -328,6 +330,13 @@ class Storage(object):
         else:
             print "user not present in the database"
             return {"status": 0}
+
+    #
+    # Update Course
+    #
+    def updateCourse(self, jsonData, email):
+        print "Update Course with email ", email
+
 
 
     #
