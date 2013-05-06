@@ -269,6 +269,7 @@ def updateCourse(email):
     jsonData = json.loads(request.body.read())
     print "Update course --- > moo.py = ", jsonData
     return room.updateCourse(jsonData, email)
+    # check the GIT
 
 
 
