@@ -25,8 +25,8 @@ class Storage(object):
         self.qc = db.quizcollection
         self.ac = db.announcementcollection
         self.dc = db.discussioncollection
-        self.userid = self.uc.count() + 1
-        self.rc = db.runCommand
+        #self.userid = self.uc.count() + 1
+        #self.rc = db.runCommand
 
     def insert(self,entity):
         print "---> insert:"
