@@ -196,6 +196,7 @@ def addCategory():
     return room.addCategory(jsonData)
 
 
+
 #
 # Get Category
 #
@@ -203,6 +204,7 @@ def addCategory():
 def getCategory(id):
     print "Get Category moo.py",id
     return room.getCategory(id)
+
 
 
 #
