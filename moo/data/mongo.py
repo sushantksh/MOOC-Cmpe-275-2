@@ -215,6 +215,94 @@ class Storage(object):
         except:
                print "Error: Problem in user entry (INPUT)", sys.exc_info()
 
+
+    # ______________________________________CATEGORY COLLECTIONS________________________________________
+
+    #
+    # Add Category
+    #
+    #
+    # Add Course
+    #
+
+    def addCategory(self, jsonObj):
+        print "Add Category------- mongo.py"
+        name = jsonObj['name']
+        teamName = "RangersCategory:"
+        objectId = uuid.uuid4()
+        localtime = time.asctime(time.localtime(time.time()))
+        print objectId, localtime
+        categoryId = teamName + str(objectId)
+        print categoryId
+        duplicateCount = self.catc.find({"name": name.strip("'")}).count()
+        print "category present count = ", duplicateCount
+        if duplicateCount == 0:
+            try:
+                additionalInfo = {"id": categoryId.strip("'"), "createDate": localtime, "status": 1}
+                finalJsonObj = dict(jsonObj.items() + additionalInfo.items())
+                self.catc.insert(finalJsonObj)
+                print "category added successfully"
+                responseCategory = self.catc.find_one({"id": categoryId.strip("'")})
+                if len(responseCategory) > 0:
+                    del responseCategory['_id']
+                    return responseCategory
+                else:
+                    print "error: Invalid ID"
+                    return {"responseCategoryId": "ID is invalid"}
+            except:
+                responseCategory = "Other Errors"
+                print "error in adding Category: ", sys.exc_value
+                return {responseCategory: 500}
+        else:
+            print "Error: Duplicate Category found"
+            responseCategory = "Name is Duplicated"
+            return {responseCategory: 409}
+
+
+    #
+    # Get Category
+    #
+
+
+    def getCategory(self,categoryId):
+        print "Get Category with category ID ",categoryId
+        checkCategoryEntry = self.catc.find({"id": categoryId.strip("'")}).count()
+        print "Category entry ", checkCategoryEntry
+        if checkCategoryEntry > 0:
+            print "Sending the Category Details"
+            categoryDetails = self.catc.find_one({"id": categoryId})
+            if len(categoryDetails) > 0:
+                print "send category details"
+                del categoryDetails['_id']
+                return categoryDetails
+            else:
+                return {"404": "Category not found"}
+        else:
+            print "Error in Getting category details ---> classroom.py"
+            return {"400": "ID is invalid"}
+
+    #
+    # List Category
+    #
+
+    def listCategory(self):
+         print "List all category ---- Mongo.py"
+         try:
+             categoryList = self.catc.find()
+             categoryListData = []
+             for data in categoryList:
+                 del data['_id']
+                 categoryListData.append(data)
+             categoryListFinal = json.dumps(categoryListData)
+             return categoryListFinal
+         except:
+             responseListCategory = "Other Errors"
+             print "error to get list details", sys.exc_info()[0]
+             return {responseListCategory: 500}
+
+
+
+    #_______________________________________ COURSE COLLECTION __________________________________________
     #
     # Drop Course
     #
@@ -282,13 +370,13 @@ class Storage(object):
             for data in courseList:
                 del data['_id']
                 courseListData.append(data)
-            #print "course list Array format", courseListData
             courseListFinal = json.dumps(courseListData)
             print "Final course list JSON format", courseListFinal
             return courseListFinal
         except:
+            listCourses = "Other Errors"
             print "error to get list details", sys.exc_info()[0]
-            return {"listCourses": "list retrieval failed"}
+            return {listCourses: 500}
 
 
     #
@@ -314,7 +402,6 @@ class Storage(object):
     #
     # Update Course
     #
-    #def updateCourse(self, ):
 
     #
     # Delete Course

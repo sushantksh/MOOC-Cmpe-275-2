@@ -118,6 +118,7 @@ def add():
 # RANGERS
 #
 # Checks if the user is present or not, if not returns a error and if present display shows.html
+
 @route('/user/auth', method='POST')
 def login():
    print '---> Checking User is present or not!!'
@@ -184,7 +185,36 @@ def updateUser():
       data = json.loads(key)
     return room.updateUser(data['email'],data['pwd'],data['fName'],data['lName'],)
 
-#_______________________________________________ COURSE COLLECTION ______________________________________#
+#________________________________________________CATEGORY COLLECTION ________________________________________
+
+#
+# Add Catergory
+#
+@route('/category', method='POST')
+def addCategory():
+    jsonData = json.loads(request.body.read())
+    return room.addCategory(jsonData)
+
+
+#
+# Get Category
+#
+@route('/category/:id', method='GET')
+def getCategory(id):
+    print "Get Category moo.py",id
+    return room.getCategory(id)
+
+
+#
+# List Category
+#
+@route('/category/list', method='GET')
+def listCourse():
+    print "List category moo.py"
+    return room.listCategory()
+
+
+# _______________________________________________ COURSE COLLECTION ______________________________________#
 #
 # Enroll Course
 #
@@ -370,6 +400,8 @@ def listDiscussion():
 def deleteDiscussion(id):
     print "Get Discussion moo.py"
     return room.deleteDiscussion(id)
+
+#____________________________________________________DISCUSSION COLLECTION ________________________________________________
 
 
 #_______________________________________________________________________________________
