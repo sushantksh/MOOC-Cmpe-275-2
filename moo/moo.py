@@ -15,6 +15,7 @@ import sys
 import socket
 import bottle
 import json
+# Using Git to collaborate
 
 # bottle framework
 from bottle import request, response, route, run, template
@@ -123,7 +124,7 @@ def add():
 def login():
    print '---> Checking User is present or not!!'
    k = request.forms.allitems()
-   print "I am in LogIn fucntion of moo.py"
+   print "I am in LogIn function of moo.py"
    for key, value in k:
       data = json.loads(key)
       print str(data)
