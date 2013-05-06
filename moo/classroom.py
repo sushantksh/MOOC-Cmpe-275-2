@@ -133,6 +133,48 @@ class Room(object):
             print "Error", sys.exc_info()[0]
             return {"updateUser": "false"}
 
+    #__________________________________CATEGORY COLLECTIONS______________________________
+
+    #
+    # Add Category
+    #
+    def addCategory(self, categoryDetails):
+        try:
+            print "In Category classroom.py : ", categoryDetails
+            return self.__store.addCategory(categoryDetails)
+        except:
+            print "Error in add category course of Classroom.py", sys.exc_info()[0]
+            return {"errorInQuery": "addCategory"}
+
+
+    #
+    #Get Category
+    #
+    def getCategory(self,categoryId):
+        try:
+            print "Inside classroom ------> Get Category"
+            print "Before return", categoryId
+            return self.__store.getCategory(categoryId)
+        except:
+            print "Error in Getting category details ---> classroom.py"
+            return {"500": "other errors"}
+
+
+    #
+    #List Course
+    #
+    def listCategory(self):
+        try:
+            print "room to stroage ------> List Category"
+            return self.__store.listCategory()
+        except:
+            print "Error in Listing category details ---> classroom.py"
+            return {"errorInQuery": "listCategory"}
+
+
+
+
+
     # _________________________________ COURSE COLLECTION _______________________________ #
     #
     # Enroll Course
