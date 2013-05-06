@@ -216,10 +216,13 @@ def listCategory():
     return room.listCategory()
 
 
-# _______________________________________________ COURSE COLLECTION ______________________________________#
+# _______________________________________________ COURSE COLLECTION _________________________________________________#
+
+
 #
 # Enroll Course
 #
+
 @route('/course/enroll', method ='PUT')
 def enrollCourse():
     print "Enroll Course moo.py"
@@ -258,13 +261,14 @@ def addCourse():
 #
 # Update Course ---------------------------------------
 #
-@route('/course' , method = "PUT")
+@route('/course/:email', method = "PUT")
 def updateCourse(email):
-    json = request.query.get(email)
-    print "JSON = ",json
+    #/:email
+    #json = request.query.get(email)
+    print "I am in update course", email
     jsonData = json.loads(request.body.read())
-    print "Update course --- > mOO.py"
-    return room.updateCourse(jsonData)
+    print "Update course --- > moo.py = ", jsonData
+    return room.updateCourse(jsonData, email)
 
 
 
@@ -330,7 +334,7 @@ def deleteQuiz(id):
     print "Get Quiz moo.py"
     return room.deleteQuiz(id)
 
-# _____________________________________________________________ ANNOUNCEMENTS __________________________
+# ___________________________________ANNOUNCEMENTS _______________________________________________
 
 #
 # Add Announcement
@@ -403,7 +407,11 @@ def deleteDiscussion(id):
     print "Get Discussion moo.py"
     return room.deleteDiscussion(id)
 
-#____________________________________________________DISCUSSION COLLECTION ________________________________________________
+#____________________________________________________MESSAGES COLLECTION____________________________________
+
+#
+#
+#
 
 
 #_______________________________________________________________________________________
