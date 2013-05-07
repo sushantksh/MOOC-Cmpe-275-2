@@ -11,6 +11,7 @@ import sys
 import uuid
 
 from pymongo import Connection
+from bottle import abort
 
 #localtime = time.asctime( time.localtime(time.time()))
 #print "Local current time :", localtime
@@ -56,65 +57,38 @@ class Storage(object):
             return {"found" :"false"}
 
     #_________________________________________________________________________________________________
-    #
-    #  Sign In
-    #
-    def signIn(self, email, pwd):
-        print "---> signIn in mongo.py storage ------> :",email,pwd
-        try:
-            result = self.uc.find_one({"email": email.strip("'")})
 
-            if len(result) == 0:
-                print "user not present"
-                return {"status": 0}
-            if result["pwd"] == pwd.strip("'"):
-                print "user is present in the MongoDB"
-                self.uc.update({"email": email.strip("'")}, {"$set": {"status": 1}})
-                del result["_id"]
-                print result
-                return result
-            else:
-                print "user not present"
-                return {"status": 0}
-        except:
-            print "error in sign in ",sys.exc_info()[0]
-            return {"status": 0}
+
 
     #
-    # SIGN OUT
+    # Create User details in backend
+    # {"email": "test@google.com","own": [],"enrolled": [],"quizzes": []}
+    # Sqlite in Django at front end has Username, firstname, lastname, password
     #
-    def signOut(self, email):
-        print "---> signIn:",email
-        try:
-            self.uc.update({"email": email.strip("'")}, {"$set": {"status": 0}})
-            return {"status": 0}
-        except:
-            print "Error in sign out ", sys.exc_info()[0]
-            return {"status": 1}
-
-    #
-    # SIGN UP
-    #
-    def signUp(self, email, pwd, fName, lName):
-        print "----> signUp: ", email
-        count = self.uc.find({"email":email.strip("'")}).count()
+    def createUser(self, jsonObj):
+        print "----> create User: ", jsonObj['email']
+        count = self.uc.find({"email": jsonObj['email'].strip("'")}).count()
         if count > 0:
-            print "user already exist with email ID: ", email
-            return {"found":"true"}
+            print "user already exist with email ID: ", jsonObj['email']
+            #return {"found":"true"}
+            abort(409, 'Duplicate Email ID')
         else:
-            print "Signing up the user with Email ID: ", email
+            print "create user with Email ID: ", jsonObj['email']
             try:
-                userInfo = {"email" : email, "pwd": pwd , "fName" : fName , "lName" : lName,"status": 0}
-                additionInfo = {"own": [],"enrolled": [],"quizzes": [{"quiz": "None","grade": 0,"submitDate": None},{"quiz": "None","grade": 0,"submitDate": None}]}
-                result = dict(userInfo.items() + additionInfo.items())
-                print result
-                self.uc.insert(result)
+                self.uc.insert(jsonObj)
                 print "new user added"
-                del result["_id"]
-                return result
+                objectId = jsonObj['_id']
+                objectIdStr = str(objectId)
+                #print objectIdStr
+                del jsonObj["_id"]
+                id = {"_id": objectIdStr}
+                finalJson = dict(jsonObj.items() + id.items())
+                #jsonObj['_id'] = objectIdStr
+                print finalJson
+                return finalJson
             except:
-                print "error: user not added"
-                return {"found": "false"}
+                print "Failed to add user"
+                abort(500, 'Other Errors')
 
 
 
@@ -127,104 +101,172 @@ class Storage(object):
             userDetails = self.uc.find_one({"email": email.strip("'")})
 
             if len(userDetails) == 0:
-                print "Failed to get details of the user"
-                return {"found": "false"}
+                print "user not found in the database"
+                abort(404, "User not found")
+                #return {"found": "false"}
             else:
-                print "Returning Json user details"
-                del userDetails["_id"]
-                del userDetails["pwd"]
-                print userDetails
+                print "Returning Json user details = ", userDetails
+                del userDetails['_id']
                 return userDetails
         except:
             print "error to get user details", sys.exc_info()[0]
-            return {"found": "false"}
-
+            abort (400, "Email is Invalid")
+            #return {"found": "false"}
 
 
 
     #
     # Delete User
     #
-    def deleteUser(self,email):
+    def deleteUser(self, email):
         print "Deleting the user mongo.py", email
-        try:
-            count = self.uc.find({"email": email.strip("'")}).count()
-            if count > 0:
-                try:
-                    print "Deleting User finally"
-                    self.uc.remove({"email": email})
-                    return {"userDeleted": "true"}
-                except:
-                    print "Failed in deleting user", sys.exc_info()
-                    return {"userDeleted": "false"}
-            else:
-                print "user not found with email id", email
-                return {"found": "false"}
-        except:
-            print "error: Invalid Email id", sys.exc_info()
-            return {"found": "false"}
+        #try:
+        count = self.uc.find({"email": email.strip("'")}).count()
+        if count > 0:
+            try:
+                print "Deleting User finally"
+                self.uc.remove({"email": email})
+                return {"success": True}
+            except:
+                print "Failed in deleting user", sys.exc_info()
+                abort(400, "Email is invalid")
+                #return {"userDeleted": "false"}
+        else:
+            print "user not found with email id", email
+            abort(404, "User not found")
+                #return {"found": "false"}
+        #except:
+         #   print "error: Invalid Email id", sys.exc_info()
+         #   return {"found": "false"}
 
 
 
     #
-    # Update User
+    # Update User .................... This will be used to Enroll Course Id, Update Own Course Id or Quiz Details
+    # It also handles requests to drop enrolled and added course and also delete quiz entries
+    # need to test if the user is already enrolled or added the class.
     #
+    # return JSON with success true or success false when user is already enrolled in the course
+    # jsonObj has email and courseId
 
-    def updateUser(self,email, password, firstName, lastName):
-        print "Updating the user details -> mongo.py", email
-        try:
-            self.uc.update({"email": email.strip("'")}, {"$set": {"pwd" : password.strip("'"), "fName": firstName.strip("'"),"lName": lastName.strip("'")}})
-            updateUserDetails = self.uc.find_one({"email": email.strip("'")})
-            if updateUserDetails > 0:
-                print "updated the entries of User", email
-                del updateUserDetails['_id']
-                return updateUserDetails
-            else:
-                print "Failed to fetch user details"
-                return {"updateUserDetails": "false"}
-        except:
-            print "error: update user failed", sys.exc_info()
-            return {"userUpdated": "false"}
+    def updateUser_CourseEntry(self, jsonObj, EntryType):
+        print "Updating the user details -> mongo.py", jsonObj['email']
+        #try:
+        #
+        # We need only the single values in own , enroll , quizzes (quizzes will have dictionary of quizId & grade)
+        #
 
+        # __________________________________ OWN COURSE ID _________________________________________________
 
+        if EntryType == "own" and jsonObj.has_key('courseId') and len(jsonObj['courseId']) != 0:
+            print "I am in Own"
+            self.uc.update({"email": jsonObj['email'].strip("'")}, {"$addToSet": {"own": jsonObj['courseId'].strip("'")}})
+
+        # __________________________________ Enrolled COURSE ID _____________________________________________
+
+        elif EntryType == "enrolled" and jsonObj.has_key('courseId') and len(jsonObj['courseId']) != 0:
+            print "I am in enrolled"
+            self.uc.update({"email": jsonObj['email'].strip("'")}, {"$addToSet": {"enrolled": jsonObj['courseId'].strip("'")}})
+
+        # __________________________________ Quiz Details ____________________________________________________
+
+        elif EntryType == "quizzes" and jsonObj.has_key('quizzes') and len(jsonObj['quizzes']) != 0:
+            print "I am in quizzes"
+
+            localtime = time.asctime( time.localtime(time.time()))
+            print "Local current time :", localtime
+            quizId = jsonObj['quizzes']['quiz']
+            print "quiz ID = ", quizId
+            grade = jsonObj['quizzes']['grade']
+            self.uc.update({"email": jsonObj['email'].strip("'")}, {"$addToSet": {"quizzes": {"quiz": quizId, "grade": grade, "submitDate": localtime}}})
+
+        #
+        # ___________________________________ Drop Enrolled Course______________________________________________
+        #
+        elif EntryType == "dropEnrolledCourse" and jsonObj.has_key('courseId') and len(jsonObj['courseId']) != 0:
+            print "I am going to Drop the enrolled course"
+            self.uc.update({"email": jsonObj['email'].strip("'")}, {"$pull": {"enrolled": jsonObj['courseId'].strip("'")}})
+
+        else:
+            print "Failed to update the User Entry details"
+            print " Own Course Id / Enroll Course Id / Quiz Details / Dropping / Deleting the course failed"
+            abort(400, "Email or Json is invalid")
+        # __________________________________Sending Response to the function back ____________________________
+
+        # Do we need to send success or whole Json to the user or both // Currently, we are sending both
+        updatedUserDetails = self.uc.find_one({"email": jsonObj['email'].strip("'")})
+        print "Details Updated:", updatedUserDetails
+        if updatedUserDetails > 0:
+            print "updated the entries of User", jsonObj['email']
+            objectId = updatedUserDetails['_id']
+            objectIdStr = str(objectId)
+            print objectIdStr
+            del updatedUserDetails["_id"]
+            id = {"_id": objectIdStr, "success": True}
+            finalUserUpdates = dict(updatedUserDetails.items() + id.items())
+            return finalUserUpdates
+        else:
+            print "Failed to fetch user details"
+            abort(500, "Other Errors - Update User Entry function")
 
     #
     # Enroll Courses
     #
-    def enrollCourse(self, email, courseId):
-        print "Enroll Course of person", email, courseId
-        try:
-            checkCourseCount = self.cc.find({"id": courseId}).count()
-            if checkCourseCount > 0:
-                checkDuplicateCourse = self.uc.find({"email": email.strip("'"), "enrolled": courseId}).count()
-                if checkDuplicateCourse == 0:
-                    try:
-                        self.uc.update({"email": email.strip("'")}, {"$addToSet": {"enrolled": courseId}})
-                        print "Updated the entry successfully"
-                        userDetails = self.uc.find_one({"email": email.strip("'")})
-                        del userDetails['_id']
-                        print userDetails
-                        return userDetails
-                    except:
-                        print "error: Failed updating course id", sys.exc_info()
-                        return {"updatingCourseId": "failed"}
-                else:
-                    print "Error: User is enrolled in this course"
-                    return {"courseId": "User Is Already Enrolled"}
-            else:
-                print "Error: Course is either deleted or not present"
-                return {"courseId": "Course Not Present"}
-        except:
-               print "Error: Problem in user entry (INPUT)", sys.exc_info()
+    def enrollCourse(self, jsonData):
+        # We need to append the team name with object ID in Django
+
+        print "Enroll Course of person with email ID", jsonData['email'], "with Course ID", jsonData['courseId']
+
+        # Check whether the user is already enrolled in the course or not
+        checkDuplicate_CourseEntry = self.uc.find({"email": jsonData['email'].strip("'"), "enrolled": jsonData['courseId'].strip("'")}).count()
+        if checkDuplicate_CourseEntry == 0:
+                #
+                # Calling updateUser_CourseEntry function
+                #
+            jsonResp = Storage.updateUser_CourseEntry(self, jsonData, "enrolled")
+            print "Course has been enrolled successfully"
+            return jsonResp
+                #userDetails = self.uc.find_one({"email": jsonData['email'].strip("'")})
+                #del userDetails['_id']
+                #print userDetails
+                #return userDetails
+        else:
+            print "User is already enrolled in the class"
+            return {"success": False}
+
+# self.uc.update({"email": jsonData['email'].strip("'")}, {"$addToSet": {"enrolled": jsonData['courseId'].strip("'")}})
+
+
+    #
+    # Drop Course
+    #
+    def dropCourse(self, jsonData):
+        print "Drop course with course Id", jsonData['courseId'], "of the person with email ID", jsonData['email']
+        #checkUserCount = self.uc.find({"email": email.strip("'")}).count()
+        #if checkUserCount > 0:
+
+        checkCourseEntry = self.uc.find({"enrolled": jsonData['courseId']}).count()
+        if checkCourseEntry > 0:
+            #
+            # Calling updateUser_CourseEntry function
+            #
+            jsonResp = Storage.updateUser_CourseEntry(self, jsonData, "enrolled")
+            print "Course Dropped Successfully"
+            return jsonResp
+            #userDetails = self.uc.find_one({"email": email.strip("'")})
+            #del userDetails['_id']
+            #return userDetails
+        else:
+            print "User is not enrolled in this course -- Cannot Drop the course"
+            return {"success": False}
+
+# self.uc.update({"email": email.strip("'")}, {"$pull": {"enrolled": courseId.strip("'")}})
 
 
     # ______________________________________CATEGORY COLLECTIONS________________________________________
 
     #
     # Add Category
-    #
-    #
-    # Add Course
     #
 
     def addCategory(self, jsonObj):
@@ -305,31 +347,6 @@ class Storage(object):
 
 
     #_______________________________________ COURSE COLLECTION __________________________________________
-    #
-    # Drop Course
-    #
-    def dropCourse(self, email, courseId):
-        print "Drop course with course Id", courseId, "of the person with email ID", email
-        checkUserCount = self.uc.find({"email": email.strip("'")}).count()
-        if checkUserCount > 0:
-            try:
-                checkCourseEntry = self.uc.find({"enrolled": courseId}).count()
-                if checkCourseEntry > 0:
-                    self.uc.update({"email": email.strip("'")}, {"$pull": {"enrolled": courseId.strip("'")}})
-                    print "Course Dropped Successfully"
-                    userDetails = self.uc.find_one({"email": email.strip("'")})
-                    del userDetails['_id']
-                    print userDetails
-                    return userDetails
-                else:
-                    print "User is not enrolled in this course -- Cannot Delete the course"
-                    return {"dropCourse": "You are not enrolled in this course"}
-            except:
-                print "Error: Failed to Drop the course.. Try Again", sys.exc_info()
-                return {"dropCourse": "Drop Course Failed"}
-        else:
-            print "user not present in the database"
-            return {"status": 0}
 
     #
     # Update Course
@@ -340,60 +357,89 @@ class Storage(object):
 
 
     #
-    # Add Course
-    #
+    # Add Course - need to check at Django whether the user belongs to different Mooc or Default Mooc
+    # If user is of same mooc append the email id to the Json else send {"email" : "NotMyMooc"}
+    # We need a Team/MOOC Name from sqlite to append it to the courseId
+    # need to append the
+    # TEST WITH TWO THINGS WITH JSON "email": "NotMyMooc" & "email": Valid EmailId of Same Mooc
 
     def addCourse(self, jsonObj):
-        print "Add course------- mongo.py"
-        teamName = "Rangers:"
-        try:
-            objectId = uuid.uuid4()
-            print objectId
-            courseId = teamName + str(objectId)
-            print courseId
-            additionInfo = {"id": courseId}
-            jsonObjFinal = dict(jsonObj.items() + additionInfo.items())
-            self.cc.insert(jsonObjFinal)
-            print "Course added successfully"
-            #self.cc.update({"_id": jsonObj['_id']}, {"$set": {"id": courseId.strip("'")}})
-            responseAddCourse = self.cc.find_one({"id": courseId.strip("'")})
-            if len(responseAddCourse) > 0:
-                del responseAddCourse['_id']
-                return responseAddCourse
-            else:
-                print "error---- Invalid Id"
-                return {"addCourse": "Invalid Course Id"}
-        except:
-            print "error in adding course: ", sys.exc_value
-            return {"addCourse": "Add Course Failed"}
+        print "Add course------- mongo.py", jsonObj
+        userEntryType = jsonObj['email']
+        print userEntryType
 
+        # user is from other MOOC
+        if userEntryType == "NotMyMooc":
+            print "user is from different mooc", userEntryType
+            del jsonObj['email']
+            self.cc.insert(jsonObj)
+            objectId = jsonObj['_id']
+            objectIdStr = str(objectId)
+            print objectIdStr
+            del jsonObj["_id"]
+            responseJson = {"_id": objectIdStr, "success": True}
+            return responseJson
+
+        # True if user is in the list
+        elif self.uc.find({ "email": {"$in": [userEntryType]}}):
+            print "User is of the same mooc", userEntryType
+            del jsonObj['email']
+            self.cc.insert(jsonObj)
+            objectId = jsonObj['_id']
+            objectIdStr = str(objectId)
+            print objectIdStr
+            jsonEntry = {"email": userEntryType, "courseId": objectIdStr}
+            jsonResp = Storage.updateUser_CourseEntry(self, jsonEntry, "own")
+            return {"_id": jsonResp['_id'], "success": True}
+        else:
+            print "Error: In adding the course"
+            abort(500, "Other Errors")
+
+    #objectId = uuid.uuid4()
+    #courseId = teamName + str(objectId)
+    #additionInfo = {"id": courseId}
 
     #
     # List all courses
     #
     def listCourse(self):
         print "List all courses ---- Mongo.py"
+        Team = "Rangers:"
         try:
-            courseList = self.cc.find()
-            courseListData = []
-            for data in courseList:
-                del data['_id']
-                courseListData.append(data)
-            courseListFinal = json.dumps(courseListData)
-            print "Final course list JSON format", courseListFinal
-            return courseListFinal
+            countCourses = self.cc.count()
+            if countCourses > 0:
+                courseList = self.cc.find()
+                courseListData = []
+                for data in courseList:
+                    objectId = data['_id']
+                    objectIdStr = str(objectId)
+                    courseId = Team + objectIdStr
+                    id = {'_id': courseId}
+                    del data['_id']
+                    data.update(id)
+                    print data
+                    courseListData.append(data)
+                courseListFinal = json.dumps(courseListData)
+                #print "Final course list JSON format", courseListFinal
+                return courseListFinal
+            else:
+                print "No courses are present on the MOOC"
+                return {"success": False}
         except:
-            listCourses = "Other Errors"
+            #listCourses = "Other Errors"
             print "error to get list details", sys.exc_info()[0]
-            return {listCourses: 500}
+            abort(500, "Other Errors")
+            #return {listCourses: 500}
 
 
     #
-    #Get Course
+    # Get Course
     #
+
     def getCourse(self, courseId):
-        print "Get Course with course ID = " + courseId
-        checkCourseEntry = self.cc.find({"id": courseId.strip("'")}).count()
+        print "Get Course with course ID = ", courseId
+        obj_id = object(courseId)
+        checkCourseEntry = self.cc.find({"_id": obj_id.strip("'")}).count()
         print "Course entry ", checkCourseEntry
         if checkCourseEntry > 0:
             print "Sending the Course Details"
@@ -403,14 +449,13 @@ class Storage(object):
                 del courseDetails['_id']
                 return courseDetails
             else:
-                return {"courseId": "Course not found"}
+                abort(400, "Id is invalid")
+                #return {"courseId": "Course not found"}
         else:
-            print "Error in Getting course details ---> mongo.py"
-            return {"courseId": "ID is invalid"}
+            print "Error in Getting course details Id Is Invalid---> mongo.py"
+            abort(404, "Course not found")
+            #return {"courseId": "ID is invalid"}
 
-    #
-    # Update Course
-    #
 
     #
     # Delete Course

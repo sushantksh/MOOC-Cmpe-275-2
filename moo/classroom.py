@@ -14,6 +14,7 @@ import json
 
 # moo 
 from data.mongo import Storage
+from bottle import abort
 
 #
 # Room (virtual classroom -> Domain) functionality - note this is separated 
@@ -75,32 +76,14 @@ class Room(object):
 
             # TODO success|failure
 
-    #_________________________________________________________________________________
-    # example: sign in
-    #
-    def signIn(self,email,pwd):
-        try:
-            print "I am going from room to storage -----------> SIGN IN"
-            return self.__store.signIn(email,pwd)
-        except:
-            return { "signIn": "false"}
 
+    # ______________________________________________ user collections___________________________________________
+    # example: signUp / Create user
     #
-    # example: sign out
-    #
-    def signOut(self,email):
-        print "Sign out function of room"
-        return self.__store.signOut(email)
+    def createUser(self, jsonObj):
+        print "I am going from room to stroge  -----------> create user"
+        return self.__store.createUser(jsonObj)
 
-    #
-    # example: signUp
-    #
-    def signUp(self,email,pwd,fName,lName):
-        try:
-            print "I am going from room to stroge  -----------> Sign UP"
-            return self.__store.signUp(email,pwd,fName,lName)
-        except:
-            return { "signUp": "false"}
 
     #
     # Get Details of the user
@@ -111,27 +94,53 @@ class Room(object):
             return self.__store.getUser(email)
         except:
             print "Error", sys.exc_info()[0]
-            return {"found": "false"}
+            abort(500, "Other Errors")
+
+
+    #
+    # Update User - It updates the course entries of user like Enrolled courses, Own courses and Quizzes & Grades
+    #
+    #def updateUser_CourseEntry(self, jsonObj):
+     #   try:
+     #       print "Classroom.py -----> update user"
+     #       return self.__store.updateUser_CourseEntry(jsonObj)
+     #   except:
+     #       print "Error", sys.exc_info()[0]
+     #       abort(500, "Other Errors")
+
+
     #
     # delete user
     #
-    def deleteUser(self,email):
+    def deleteUser(self, email):
         try:
             print "Classroom.py -----> delete user"
             return self.__store.deleteUser(email)
         except:
             print "Error", sys.exc_info()[0]
-            return {"found": "false"}
+            abort(500, "Other Errors")
+
+
     #
-    # update user
+    # Enroll Course
     #
-    def updateUser(self, email, password, firstName, lastName):
-        try:
-            print "Classroom.py -----> update user"
-            return self.__store.updateUser(email, password, firstName, lastName)
-        except:
-            print "Error", sys.exc_info()[0]
-            return {"updateUser": "false"}
+    def enrollCourse(self, jsonObj):
+        #try:
+        print "Room to storage -----> enroll course"
+        return self.__store.enrollCourse(jsonObj)
+        #except:
+        #    print "Error in enroll course of Classroom.py",sys.exc_traceback
+        #    abort(500, "Other Errors")
+            #return {"errorInQuery": "enrollCourse"}
+
+
+    #
+    # Drop Course
+    #
+    def dropCourse(self, jsonObj):
+        print "Room to storage -------> Drop Course"
+        return self.__store.dropCourse(jsonObj)
+
 
     #__________________________________CATEGORY COLLECTIONS______________________________
 
@@ -176,64 +185,42 @@ class Room(object):
 
 
     # _________________________________ COURSE COLLECTION _______________________________ #
-    #
-    # Enroll Course
-    #
-    def enrollCourse(self, email, courseId):
-        try:
-            print "Room to storage -----> enroll course"
-            return self.__store.enrollCourse(email,courseId)
-        except:
-            print "Error in enroll course of Classroom.py",sys.exc_info()[0]
-            return {"errorInQuery": "enrollCourse"}
 
-    #
-    # Drop Course
-    #
-    def dropCourse(self, email, courseId):
-        try:
-            print "Room to storage -------> Drop Course"
-            return self.__store.dropCourse(email, courseId)
-        except:
-            print "Error in drop course -----> Classroom.py", sys.exc_info()
-            return {"errorInQuery": "dropCourse"}
 
     #
     # Add Course
     #
     def addCourse(self, jsonObj):
-        try:
-            print "Room to storage -----> Add Course"
-            return self.__store.addCourse(jsonObj)
-        except:
-             print "Error in Add course -------> Classroom.py", sys.exc_traceback
-             return {"errorInQuery": "AddCourse"}
+        print "Room to storage -----> Add Course"
+        return self.__store.addCourse(jsonObj)
 
+    #
+    # Update Course
+    #
+    def updateCourse(self, jsonData, email):
+        try:
+            print "Room to storage ----> update course"
+            return self.__store.updateCourse(jsonData, email)
+        except:
+            print "Error in Update Course ---------> classroom.py", sys.exc_traceback
+            return {"errorInQuery": "UpdateCourse"}
 
 
     #
     #List Course
     #
     def listCourse(self):
-        try:
-            print "room to storage ------> List Course"
-            return self.__store.listCourse()
-        except:
-            print "Error in Getting listing details ---> classroom.py"
-            return {"errorInQuery": "listCourse"}
+        print "room to storage ------> List Course"
+        return self.__store.listCourse()
 
 
 
     #
-    #Get Course
+    # Get Course
     #
     def getCourse(self, courseId):
-        try:
-            print "room to stroage ------> Get Course"
-            return self.__store.getCourse(courseId)
-        except:
-            print "Error in Getting course details ---> classroom.py"
-            return {"errorInQuery": "getCourse"}
+        print "room to stroage ------> Get Course"
+        return self.__store.getCourse(courseId)
 
     #
     # Delete Course

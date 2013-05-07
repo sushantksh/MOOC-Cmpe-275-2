@@ -18,7 +18,7 @@ import json
 # Using Git to collaborate
 
 # bottle framework
-from bottle import request, response, route, run, template
+from bottle import request, response, route, abort, run, template
 
 # moo
 from classroom import Room
@@ -132,29 +132,18 @@ def login():
    # example list form values
    return room.signIn(data['email'], data['pwd'])
 
+#_______________________________________ User collection _______________________________________________
 #
-# example sign out for user
-#
-@route('/user/signout/:email', method='GET')
-def logout(email):
-   print '---> moo.logout', email
-   return room.signOut(email)
-
-
-#
-# SignUp / Create User
+# Create User
 #
 @route('/user', method = 'POST')
-def signUp():
-   print 'sign UP ------> moo.signUp'
-   k = request.forms.allitems()
-   print "I am in Sign Up fucntion of moo.py"
-   for key, value in k:
-      data = json.loads(key)
-      print str(data)
-
-   # example list form values
-   return room.signUp(data['email'], data['pwd'], data['fName'], data['lName'])
+def createUser():
+   print 'create User ------> moo.signUp'
+   jsonData = json.loads(request.body.read())
+   if not jsonData:
+       abort(400, 'No data received')
+   print jsonData
+   return room.createUser(jsonData)
 
 
 #
@@ -163,7 +152,21 @@ def signUp():
 @route('/user/:email', method = 'GET')
 def getUser(email):
     print 'Get User details Mooc.py'
+    if not email:
+        abort(400, 'No Email Id specified')
     return room.getUser(email)
+
+
+#
+# Update User - It updates the course entries of user like Enrolled courses, Own courses and Quizzes & Grades
+#
+#@route('/user', method ='PUT')
+#def updateUser_CourseEntry():
+#    print 'Update User Moo.py'
+#    jsonData = json.loads(request.body.read())
+#    if not jsonData:
+#       abort(400, 'No data received')
+#    return room.updateUser_CourseEntry(jsonData)
 
 
 #
@@ -175,16 +178,35 @@ def deleteUser(email):
     return room.deleteUser(email)
 
 
+
 #
-# update user
+# Enroll Course
 #
-@route('/user', method ='PUT')
-def updateUser():
-    print 'Update User Moo.py'
-    k = request.forms.allitems()
-    for key, value in k:
-      data = json.loads(key)
-    return room.updateUser(data['email'],data['pwd'],data['fName'],data['lName'],)
+
+@route('/course/enroll', method ='PUT')
+def enrollCourse():
+    print "Enroll Course moo.py"
+    jsonData = json.loads(request.body.read())
+    if not jsonData:
+       abort(400, 'No data received')
+    return room.enrollCourse(jsonData)
+
+
+
+#
+# Drop Course
+#
+
+@route('/course/drop', method ='PUT')
+def dropCourse():
+    print "Drop Course moo.py"
+    jsonData = json.loads(request.body.read())
+    if not jsonData:
+       abort(400, 'No data received')
+    return room.dropCourse(jsonData)
+
+
+
 
 #________________________________________________CATEGORY COLLECTION ________________________________________
 
@@ -203,7 +225,7 @@ def addCategory():
 #
 @route('/category/:id', method='GET')
 def getCategory(id):
-    print "Get Category moo.py",id
+    print "Get Category moo.py", id
     return room.getCategory(id)
 
 
@@ -219,56 +241,29 @@ def listCategory():
 
 # _______________________________________________ COURSE COLLECTION _________________________________________________#
 
-
-#
-# Enroll Course
-#
-
-@route('/course/enroll', method ='PUT')
-def enrollCourse():
-    print "Enroll Course moo.py"
-    jsonArray = request.forms.allitems()
-
-    for key,value in jsonArray:
-        jsonData = json.loads(key)
-        # loads is converting the data into JSON format
-        print str(jsonData)
-
-    return room.enrollCourse(jsonData['email'], jsonData['courseId'])
-
-#
-# Drop Course
-#
-@route('/course/drop', method ='PUT')
-def dropCourse():
-    print "Drop Course moo.py"
-    jsonArray = request.forms.allitems()
-    for key, value in jsonArray:
-        jsonData = json.loads(key)
-        print str(jsonData)
-    return room.dropCourse(jsonData['email'], jsonData['courseId'])
-
-
 #
 # Add Course
 #
+
 @route('/course', method = 'POST')
 def addCourse():
     print "Add Course moo.py"
     jsonData = json.loads(request.body.read())
+    if not jsonData:
+        abort(400, "No Json Data Received")
     return room.addCourse(jsonData)
 
 
 #
 # Update Course ---------------------------------------
 #
+
 @route('/course/:email', method = "PUT")
 def updateCourse(email):
-    #/:email
-    #json = request.query.get(email)
     print "I am in update course", email
     jsonData = json.loads(request.body.read())
-    print "Update course --- > moo.py = ", jsonData
+    if not jsonData:
+        abort(400, "No Json Data Received")
     return room.updateCourse(jsonData, email)
     # check the GIT
 
@@ -277,6 +272,7 @@ def updateCourse(email):
 #
 # List Courses
 #
+
 @route('/course/list', method = 'GET')
 def listCourse():
     print 'List all courses moo.py'
@@ -286,17 +282,23 @@ def listCourse():
 #
 # Get Course
 #
+
 @route('/course/:id', method = 'GET')
 def getCourse(id):
     print "Get Course moo.py"
+    if not id:
+        abort(400, 'No Email Id specified')
     return room.getCourse(id)
 
 #
 # Delete Course
 #
+
 @route('/course/:id', method = 'DELETE')
 def deleteCourse(id):
     print "Get Course moo.py"
+    if not id:
+        abort(400, 'No Email Id specified')
     return room.deleteCourse(id)
 
 # _____________________________________________________________ QUIZZES __________________________
