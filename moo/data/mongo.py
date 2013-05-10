@@ -183,6 +183,7 @@ class Storage(object):
         #
         # ___________________________________ Drop Enrolled Course______________________________________________
         #
+
         elif EntryType == "dropEnrolledCourse" and jsonObj.has_key('courseId') and len(jsonObj['courseId']) != 0:
             print "I am going to Drop the enrolled course"
             self.uc.update({"email": jsonObj['email'].strip("'")}, {"$pull": {"enrolled": jsonObj['courseId'].strip("'")}})
@@ -191,9 +192,11 @@ class Storage(object):
             print "Failed to update the User Entry details"
             print " Own Course Id / Enroll Course Id / Quiz Details / Dropping / Deleting the course failed"
             abort(400, "Email or Json is invalid")
+
         # __________________________________Sending Response to the function back ____________________________
 
         # Do we need to send success or whole Json to the user or both // Currently, we are sending both
+        print "email ------------------- ", jsonObj['email'].strip("'")
         updatedUserDetails = self.uc.find_one({"email": jsonObj['email'].strip("'")})
         print "Details Updated:", updatedUserDetails
         if updatedUserDetails > 0:
@@ -351,9 +354,34 @@ class Storage(object):
     #
     # Update Course
     #
-    def updateCourse(self, jsonData, email):
-        print "Update Course with email ", email
+    def updateCourse(self, jsonData, courseId):
+        print "Update Course with email ", courseId
+        #respCode = 200
+        from bson.objectid import ObjectId
+        try:
+            obj_id = ObjectId(courseId)
+        except:
+            print "Error: Not a valid Object ID", sys.exc_traceback
+            respCode = 500
+            abort(500, respCode)
 
+        print "Converted object Id from string to object = ", obj_id
+        checkCourseEntry = self.cc.find({"_id": obj_id}).count()
+        print "course entry  = ",checkCourseEntry
+        if checkCourseEntry > 0:
+            try:
+                self.cc.update({"_id": obj_id}, {"$set": {"category": jsonData['category'], "term": jsonData['term'],"Description": jsonData['Description'], "title": jsonData['title'], "section": jsonData['section'],"days": jsonData['days'], "hours": jsonData['hours'], "dept": jsonData['dept'], "instructor": jsonData['instructor'], "attachment": jsonData['attachment'], "year": jsonData['year']}})
+                #"instructor": jsonData['instructor']
+                print "Course details updated successfully"
+                return jsonData
+            except:
+                print "error: course Id or Json is invalid", sys.exc_traceback
+                respCode = 400
+                abort(400, respCode)
+        else:
+            print "error: course not found"
+            respCode = 404
+            abort(404, respCode)
 
 
     #
@@ -381,7 +409,7 @@ class Storage(object):
             return responseJson
 
         # True if user is in the list
-        elif self.uc.find({ "email": {"$in": [userEntryType]}}):
+        elif self.uc.find({"email": {"$in": [userEntryType]}}):
             print "User is of the same mooc", userEntryType
             del jsonObj['email']
             self.cc.insert(jsonObj)
@@ -438,12 +466,14 @@ class Storage(object):
 
     def getCourse(self, courseId):
         print "Get Course with course ID = ", courseId
-        obj_id = object(courseId)
-        checkCourseEntry = self.cc.find({"_id": obj_id.strip("'")}).count()
+        from bson.objectid import ObjectId
+        obj_id = ObjectId(courseId)
+        print "Object ID", obj_id
+        checkCourseEntry = self.cc.find({"_id": obj_id}).count()
         print "Course entry ", checkCourseEntry
         if checkCourseEntry > 0:
-            print "Sending the Course Details"
-            courseDetails = self.cc.find_one({"id": courseId})
+            courseDetails = self.cc.find_one({"_id": obj_id})
+            print courseDetails
             if len(courseDetails) > 0:
                 print "send course details"
                 del courseDetails['_id']
@@ -460,15 +490,16 @@ class Storage(object):
     #
     # Delete Course
     #
+
     def deleteCourse(self, id):
         print "Delete Course with ID = ", id
-        responseHandler = 0
+        obj_id = object(id)
         try:
-            deleteCount = self.cc.find({"id": id}).count()
+            deleteCount = self.cc.find({"_id": obj_id}).count()
             if deleteCount > 0:
-                self.cc.remove({"id": id})
+                self.cc.remove({"_id": obj_id})
                 print "Delete successful"
-                return {"deleteCourse":"success"}
+                return {"deleteCourse": "success"}
             else:
                 print "error: Invalid ID - MONGO.py"
                 responseHandler = 400
@@ -665,7 +696,6 @@ class Storage(object):
             return {"deleteAnnouncement":"failed"}
 
     #_____________________________DISCUSSIONS__________________________________________
-
 
     #
     # Add Discussion

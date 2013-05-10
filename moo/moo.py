@@ -20,6 +20,7 @@ import json
 # bottle framework
 from bottle import request, response, route, abort, run, template
 
+
 # moo
 from classroom import Room
 
@@ -258,14 +259,13 @@ def addCourse():
 # Update Course ---------------------------------------
 #
 
-@route('/course/:email', method = "PUT")
-def updateCourse(email):
-    print "I am in update course", email
+@route('/course/update/:id', method = "PUT")
+def updateCourse(id):
+    print "I am in update course", id
     jsonData = json.loads(request.body.read())
     if not jsonData:
         abort(400, "No Json Data Received")
-    return room.updateCourse(jsonData, email)
-    # check the GIT
+    return room.updateCourse(jsonData, id)
 
 
 
@@ -279,16 +279,16 @@ def listCourse():
     return room.listCourse()
 
 
+
 #
 # Get Course
 #
-
-@route('/course/:id', method = 'GET')
-def getCourse(id):
+@route('/course/:courseId', method='GET')
+def getCourse(courseId):
     print "Get Course moo.py"
     if not id:
         abort(400, 'No Email Id specified')
-    return room.getCourse(id)
+    return room.getCourse(courseId)
 
 #
 # Delete Course
@@ -296,7 +296,7 @@ def getCourse(id):
 
 @route('/course/:id', method = 'DELETE')
 def deleteCourse(id):
-    print "Get Course moo.py"
+    print "Delete Course moo.py"
     if not id:
         abort(400, 'No Email Id specified')
     return room.deleteCourse(id)
@@ -316,7 +316,7 @@ def addQuiz():
 #
 # Get Quiz
 #
-@route('/quiz/:id' , method = 'GET')
+@route('/quiz/:id', method = 'GET')
 def getQuiz(id):
     print "Get  Quiz----> Moo.py"
     return room.getQuiz(id)

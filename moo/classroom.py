@@ -197,13 +197,14 @@ class Room(object):
     #
     # Update Course
     #
-    def updateCourse(self, jsonData, email):
-        try:
-            print "Room to storage ----> update course"
-            return self.__store.updateCourse(jsonData, email)
-        except:
-            print "Error in Update Course ---------> classroom.py", sys.exc_traceback
-            return {"errorInQuery": "UpdateCourse"}
+    def updateCourse(self, jsonData, courseId):
+        respCode = 500
+        print "Room to storage ----> update course"
+        #try:
+        return self.__store.updateCourse(jsonData, courseId)
+        #except:
+         #   print "500 internal server error ---> classroom.py",sys.exc_traceback
+         #  abort(500, respCode)
 
 
     #
