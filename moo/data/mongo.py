@@ -405,7 +405,7 @@ class Storage(object):
             objectIdStr = str(objectId)
             print objectIdStr
             del jsonObj["_id"]
-            responseJson = {"_id": objectIdStr, "success": True}
+            responseJson = {"id": objectIdStr, "success": True}
             return responseJson
 
         # True if user is in the list
@@ -418,7 +418,7 @@ class Storage(object):
             print objectIdStr
             jsonEntry = {"email": userEntryType, "courseId": objectIdStr}
             jsonResp = Storage.updateUser_CourseEntry(self, jsonEntry, "own")
-            return {"_id": jsonResp['_id'], "success": True}
+            return {"id": jsonResp['_id'], "success": True}
         else:
             print "Error: In adding the course"
             abort(500, "Other Errors")
@@ -518,48 +518,51 @@ class Storage(object):
     # Add Quiz
     #
     def addQuiz(self, jsonObj):
-        try:
-            print "Add quiz ---> mongo.py"
-            teamName = "RangersQuiz:"
-            objectId = uuid.uuid4()
-            print objectId
-            quizId = teamName + str(objectId)
-            print quizId
-            additionInfo = {"id": quizId}
-            jsonObjFinal = dict(jsonObj.items() + additionInfo.items())
-            self.qc.insert(jsonObjFinal)
-            print "Quiz added successfully"
-            responseAddQuiz = self.qc.find_one({"id": quizId.strip("'")})
-            if len(responseAddQuiz) > 0:
-                del responseAddQuiz['_id']
-                return responseAddQuiz
-            else:
-                print "error: Invalid ID"
-                return {"quizId": "ID is invalid"}
-        except:
-            print "error in adding quiz: ", sys.exc_traceback
-            return {"addQuiz": "quiz addition Failed"}
 
+        print "Add quiz ---> mongo.py", jsonObj
+        try:
+            self.qc.insert(jsonObj)
+            objectId = jsonObj['_id']
+            objectIdStr = str(objectId)
+            print objectIdStr
+            del jsonObj["_id"]
+            additionInfo = {"id": objectIdStr, "success": True}
+            responseAddQuiz = dict(additionInfo.items() + jsonObj.items())
+            return responseAddQuiz
+        except:
+            print "Error: In adding quiz details", sys.exc_traceback
+            respcode = 500
+            abort(500, respcode)
 
     #
     #Get Quiz
     #
     def getQuiz(self, quizId):
         print "Get quiz with quiz ID = " + quizId
-        checkQuizEntry = self.qc.find({"id": quizId.strip("'")}).count()
-        print "Quiz entry ", checkQuizEntry
+        from bson.objectid import ObjectId
+        try:
+            objectId = ObjectId(quizId)
+        except:
+            print "Error: ID is Invalid", sys.exc_traceback
+            respcode = 400
+            abort(400,respcode)
+        checkQuizEntry = self.qc.find({"_id": objectId}).count()
+        print "Quiz entry", checkQuizEntry
         if checkQuizEntry > 0:
             print "Sending the Quiz Details"
-            quizDetails = self.qc.find_one({"id": quizId})
+            quizDetails = self.qc.find_one({"_id": objectId})
             if len(quizDetails) > 0:
                 print "send quiz details"
                 del quizDetails['_id']
                 return quizDetails
             else:
-                return {"quizId": "Quiz not found"}
+                print "Error: 500 Internal Server --> mongo.py"
+                respcode = 500
+                abort(500, respcode)
         else:
-            print "Error in Getting quiz details ---> mongo.py"
-            return {"quizId": "ID is invalid"}
+            print "Error: Quiz Not Found"
+            respcode = 404
+            abort(404, respcode)
 
 
     #
@@ -567,19 +570,31 @@ class Storage(object):
     #
     def listQuiz(self):
         print "List all quizzes ---- Mongo.py"
+        Team = "Rangers:"
         try:
-            quizList = self.qc.find()
-            quizListData = []
-            for data in quizList:
-                del data['_id']
-                quizListData.append(data)
-            #print "course list Array format", courseListData
-            quizListFinal = json.dumps(quizListData)
-            print "Final quiz list JSON format", quizListFinal
-            return quizListFinal
+            countQuizzes = self.qc.count()
+            if countQuizzes > 0:
+                quizList = self.qc.find()
+                quizListData = []
+                for data in quizList:
+                    objectId = data['_id']
+                    objectIdStr = str(objectId)
+                    quizId = Team + objectIdStr
+                    id = {'id': quizId}
+                    del data['_id']
+                    data.update(id)
+                    print data
+                    quizListData.append(data)
+                quizListFinal = json.dumps(quizListData)
+                return quizListFinal
+            else:
+                print "No courses are present on the MOOC"
+                return {"success": False}
         except:
-            print "error to get quiz list details", sys.exc_info()[0]
-            return {"listQuizzes": "list retrieval failed"}
+            #listCourses = "Other Errors"
+            print "error to get list details", sys.exc_info()[0]
+            abort(500, "Other Errors")
+            #return {listCourses: 500}
 
     #
     # Delete Quiz
