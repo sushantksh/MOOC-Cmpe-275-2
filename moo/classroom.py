@@ -156,13 +156,8 @@ class Room(object):
     #Get Category
     #
     def getCategory(self,categoryId):
-        try:
-            print "Inside classroom ------> Get Category"
-            print "Before return", categoryId
-            return self.__store.getCategory(categoryId)
-        except:
-            print "Error in Getting category details ---> classroom.py"
-            return {"500": "other errors"}
+        print "Inside classroom ------> Get Category"
+        return self.__store.getCategory(categoryId)
 
 
     #

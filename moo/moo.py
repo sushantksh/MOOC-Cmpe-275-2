@@ -216,6 +216,7 @@ def dropCourse():
 #
 @route('/category', method='POST')
 def addCategory():
+    print "add category ---> moo.py"
     jsonData = json.loads(request.body.read())
     if not jsonData:
        abort(400, 'No data received')
@@ -229,6 +230,8 @@ def addCategory():
 @route('/category/:categoryId', method='GET')
 def getCategory(categoryId):
     print "Get Category moo.py", categoryId
+    if not categoryId:
+       abort(400, 'No data received')
     return room.getCategory(categoryId)
 
 

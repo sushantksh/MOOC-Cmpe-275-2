@@ -276,26 +276,32 @@ class Storage(object):
         print "Add Category------- mongo.py"
         name = jsonObj['name']
         teamName = "RangersCategory:"
-        objectId = uuid.uuid4()
+        #obj_id = uuid.uuid4()
         localtime = time.asctime(time.localtime(time.time()))
-        print objectId, localtime
-        categoryId = teamName + str(objectId)
-        print categoryId
+        print localtime
+        #categoryId = teamName + str(objectId)
         duplicateCount = self.catc.find({"name": name.strip("'")}).count()
-        print "category present count = ", duplicateCount
         if duplicateCount == 0:
             try:
-                additionalInfo = {"id": categoryId.strip("'"), "createDate": localtime, "status": 1}
-                finalJsonObj = dict(jsonObj.items() + additionalInfo.items())
-                self.catc.insert(finalJsonObj)
+                self.catc.insert(jsonObj)
+                objectId = jsonObj['_id']
+                obj_id = str(objectId)
+                del jsonObj['_id']
+                additionalInfo = {"createDate": localtime, "status": 1}
+                categoryId = {"categoryId": obj_id.strip("'")}
+                self.catc.update({"name": jsonObj['name'].strip("'")}, {"$addToSet": additionalInfo})
+                finalJsonObj = dict(jsonObj.items() + additionalInfo.items() + categoryId.items())
+                #self.catc.insert(finalJsonObj)
                 print "category added successfully"
-                responseCategory = self.catc.find_one({"id": categoryId.strip("'")})
-                if len(responseCategory) > 0:
-                    del responseCategory['_id']
-                    return responseCategory
-                else:
-                    print "error: Invalid ID"
-                    return {"responseCategoryId": "ID is invalid"}
+                #del finalJsonObj['_id']
+                return finalJsonObj
+                #responseCategory = self.catc.find_one({"_id": })
+                #if len(responseCategory) > 0:
+                #    del responseCategory['_id']
+                #    return responseCategory
+                #else:
+                #    print "error: Invalid ID"
+                #    return {"responseCategoryId": "ID is invalid"}
             except:
                 responseCategory = "Other Errors"
                 print "error in adding Category: ", sys.exc_value
@@ -312,21 +318,33 @@ class Storage(object):
 
 
     def getCategory(self,categoryId):
-        print "Get Category with category ID ",categoryId
-        checkCategoryEntry = self.catc.find({"id": categoryId.strip("'")}).count()
+        print "Get Category in mongo.py with category ID = ", categoryId
+        try:
+            # Converting the String Type Category Id into Object Type Category Id
+            from bson.objectid import ObjectId
+            objectId = ObjectId(categoryId)
+        except:
+            print "Error: The ID is invalid", sys.exc_traceback
+            responseCode = 400
+            abort(400, responseCode)
+        checkCategoryEntry = self.catc.find({"_id": objectId}).count()
         print "Category entry ", checkCategoryEntry
         if checkCategoryEntry > 0:
             print "Sending the Category Details"
-            categoryDetails = self.catc.find_one({"id": categoryId})
+            categoryDetails = self.catc.find_one({"_id": objectId})
             if len(categoryDetails) > 0:
                 print "send category details"
                 del categoryDetails['_id']
                 return categoryDetails
             else:
-                return {"404": "Category not found"}
+                print "Error: Category not found", sys.exc_traceback
+                responseCode = 500
+                abort(500, responseCode)
+                #return {"500": "Internal server error"}
         else:
-            print "Error in Getting category details ---> classroom.py"
-            return {"400": "ID is invalid"}
+            print "Error: Category not found", sys.exc_traceback
+            responseCode = 404
+            abort(404, responseCode)
 
     #
     # List Category
@@ -405,7 +423,7 @@ class Storage(object):
             objectIdStr = str(objectId)
             print objectIdStr
             del jsonObj["_id"]
-            responseJson = {"id": objectIdStr, "success": True}
+            responseJson = {"courseId": objectIdStr, "success": True}
             return responseJson
 
         # True if user is in the list
@@ -418,7 +436,7 @@ class Storage(object):
             print objectIdStr
             jsonEntry = {"email": userEntryType, "courseId": objectIdStr}
             jsonResp = Storage.updateUser_CourseEntry(self, jsonEntry, "own")
-            return {"id": jsonResp['_id'], "success": True}
+            return {"courseId": jsonResp['_id'], "success": True}
         else:
             print "Error: In adding the course"
             abort(500, "Other Errors")
@@ -442,7 +460,7 @@ class Storage(object):
                     objectId = data['_id']
                     objectIdStr = str(objectId)
                     courseId = Team + objectIdStr
-                    id = {'_id': courseId}
+                    id = {'courseId': courseId}
                     del data['_id']
                     data.update(id)
                     print data
@@ -466,8 +484,13 @@ class Storage(object):
 
     def getCourse(self, courseId):
         print "Get Course with course ID = ", courseId
-        from bson.objectid import ObjectId
-        obj_id = ObjectId(courseId)
+        try:
+            from bson.objectid import ObjectId
+            obj_id = ObjectId(courseId)
+        except:
+            print "Error: Id is invalid", sys.exc_traceback
+            respcode = 400
+            abort(400, respcode)
         print "Object ID", obj_id
         checkCourseEntry = self.cc.find({"_id": obj_id}).count()
         print "Course entry ", checkCourseEntry
@@ -479,11 +502,14 @@ class Storage(object):
                 del courseDetails['_id']
                 return courseDetails
             else:
-                abort(400, "Id is invalid")
+                print "ERROR: course not found", sys.exc_traceback
+                respcode = 500
+                abort(500, respcode)
                 #return {"courseId": "Course not found"}
         else:
             print "Error in Getting course details Id Is Invalid---> mongo.py"
-            abort(404, "Course not found")
+            respcode = 404
+            abort(404, respcode)
             #return {"courseId": "ID is invalid"}
 
 
@@ -491,24 +517,40 @@ class Storage(object):
     # Delete Course
     #
 
-    def deleteCourse(self, id):
-        print "Delete Course with ID = ", id
-        obj_id = object(id)
+    def deleteCourse(self, courseId):
+        print "Delete Course with ID = ", courseId
+        try:
+            from bson.objectid import ObjectId
+            obj_id = ObjectId(courseId)
+        except:
+            print "Error: Id Is Invalid", sys.exc_traceback
+            responseHandler = 400
+            abort(400, responseHandler)
         try:
             deleteCount = self.cc.find({"_id": obj_id}).count()
             if deleteCount > 0:
+                userDetails = self.uc.find_one({"own": courseId})
+                print "User details = ", userDetails
+                if userDetails > 0:
+                    print "User with add course ID = ", userDetails['email']
+                    self.uc.update({"own": userDetails['own']}, {"$pull": {"own": courseId}})
+                else:
+                    print "error: User is from different Mooc"
+
+                ### Deleting course from course collection ###
+
                 self.cc.remove({"_id": obj_id})
                 print "Delete successful"
-                return {"deleteCourse": "success"}
+                return {"success": True}
             else:
-                print "error: Invalid ID - MONGO.py"
-                responseHandler = 400
-                return {"deleteCourse": responseHandler}
-
+                print "error: Invalid ID - mongo.py"
+                responseHandler = 404
+                abort(400, responseHandler)
+                #return {"deleteCourse": responseHandler}
         except:
             print "error: course not found - MONGO.py", sys.exc_traceback
-
-            return {"deleteCourse":"failed"}
+            responseHandler = 500
+            abort(500, responseHandler)
 
 
     #_____________________________QUIZZES__________________________________________
