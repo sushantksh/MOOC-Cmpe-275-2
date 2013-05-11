@@ -148,12 +148,8 @@ class Room(object):
     # Add Category
     #
     def addCategory(self, categoryDetails):
-        try:
-            print "In Category classroom.py : ", categoryDetails
-            return self.__store.addCategory(categoryDetails)
-        except:
-            print "Error in add category course of Classroom.py", sys.exc_info()[0]
-            return {"errorInQuery": "addCategory"}
+        print "In Category classroom.py : ", categoryDetails
+        return self.__store.addCategory(categoryDetails)
 
 
     #
@@ -227,7 +223,7 @@ class Room(object):
     # Delete Course
     #
     def deleteCourse(self, id):
-        print "delete Course moo.py"
+        print "Room to storage ------> Delete Course"
         return self.__store.deleteCourse(id)
 
     # ___________________________________________ QUIZZES ___________________________________________
@@ -241,23 +237,15 @@ class Room(object):
     #Get Quiz
     #
     def getQuiz(self, quizId):
-        try:
-            print "room to stroage ------> Get Quiz"
-            return self.__store.getQuiz(quizId)
-        except:
-            print "Error in Getting Quiz details ---> classroom.py"
-            return {"errorInQuery": "getQuiz"}
+        print "room to stroage ------> Get Quiz"
+        return self.__store.getQuiz(quizId)
 
     #
     #List Quiz
     #
     def listQuiz(self):
-        try:
-            print "room to storage ------> List Quiz"
-            return self.__store.listQuiz()
-        except:
-            print "Error in  listing Quiz details ---> classroom.py"
-            return {"errorInQuery": "listQuiz"}
+        print "room to storage ------> List Quiz"
+        return self.__store.listQuiz()
 
     #
     # Delete Quiz

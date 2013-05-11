@@ -217,6 +217,8 @@ def dropCourse():
 @route('/category', method='POST')
 def addCategory():
     jsonData = json.loads(request.body.read())
+    if not jsonData:
+       abort(400, 'No data received')
     return room.addCategory(jsonData)
 
 
@@ -224,10 +226,10 @@ def addCategory():
 #
 # Get Category
 #
-@route('/category/:id', method='GET')
-def getCategory(id):
-    print "Get Category moo.py", id
-    return room.getCategory(id)
+@route('/category/:categoryId', method='GET')
+def getCategory(categoryId):
+    print "Get Category moo.py", categoryId
+    return room.getCategory(categoryId)
 
 
 
@@ -259,13 +261,13 @@ def addCourse():
 # Update Course ---------------------------------------
 #
 
-@route('/course/update/:id', method = "PUT")
-def updateCourse(id):
-    print "I am in update course", id
+@route('/course/update/:courseId', method = "PUT")
+def updateCourse(courseId):
+    print "I am in update course", courseId
     jsonData = json.loads(request.body.read())
     if not jsonData:
         abort(400, "No Json Data Received")
-    return room.updateCourse(jsonData, id)
+    return room.updateCourse(jsonData, courseId)
 
 
 
@@ -294,19 +296,19 @@ def getCourse(courseId):
 # Delete Course
 #
 
-@route('/course/:id', method = 'DELETE')
-def deleteCourse(id):
+@route('/course/:courseId', method = 'DELETE')
+def deleteCourse(courseId):
     print "Delete Course moo.py"
     if not id:
         abort(400, 'No Email Id specified')
-    return room.deleteCourse(id)
+    return room.deleteCourse(courseId)
 
 # _____________________________________________________________ QUIZZES __________________________
 
 #
 # Add Quiz
 #
-@route('/quizzes' , method = 'POST')
+@route('/quizzes', method = 'POST')
 def addQuiz():
     print "Add Quiz----> Moo.py"
     jsonData = json.loads(request.body.read())
