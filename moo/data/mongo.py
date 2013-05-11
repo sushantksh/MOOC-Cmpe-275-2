@@ -351,19 +351,32 @@ class Storage(object):
     #
 
     def listCategory(self):
-         print "List all category ---- Mongo.py"
-         try:
-             categoryList = self.catc.find()
-             categoryListData = []
-             for data in categoryList:
-                 del data['_id']
-                 categoryListData.append(data)
-             categoryListFinal = json.dumps(categoryListData)
-             return categoryListFinal
-         except:
-             responseListCategory = "Other Errors"
-             print "error to get list details", sys.exc_info()[0]
-             return {responseListCategory: 500}
+        print "List all category ---- Mongo.py"
+        Team = "Rangers:"
+        try:
+            countCategory = self.catc.count()
+            if countCategory > 0:
+                categoryList = self.catc.find()
+                categoryListData = []
+                for data in categoryList:
+                    objectId = data['_id']
+                    objectIdStr = str(objectId)
+                    categoryId = Team + objectIdStr
+                    catId = {'categoryId': categoryId}
+                    del data['_id']
+                    data.update(catId)
+                    #print data
+                    categoryListData.append(data)
+                courseListFinal = json.dumps(categoryListData)
+                print "Final Category List ", courseListFinal
+                return courseListFinal
+            else:
+                print "No courses are present on the MOOC"
+                return {"success": False}
+        except:
+            print "error to get category list details", sys.exc_info()[0]
+            respCode = 500
+            abort(500, respCode)
 
 
 

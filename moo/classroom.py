@@ -164,12 +164,8 @@ class Room(object):
     #List Course
     #
     def listCategory(self):
-        try:
-            print "room to stroage ------> List Category"
-            return self.__store.listCategory()
-        except:
-            print "Error in Listing category details ---> classroom.py"
-            return {"errorInQuery": "listCategory"}
+        print "room to stroage ------> List Category"
+        return self.__store.listCategory()
 
 
 
