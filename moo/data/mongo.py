@@ -211,7 +211,7 @@ class Storage(object):
 
         # __________________________________Sending Response to the function back ____________________________
 
-        # Do we need to send success or whole Json to the user or both // Currently, we are sending both
+
         updatedUserDetails = self.uc.find_one({"email": jsonObj['email'].strip("'")})
         #print "Details Updated:", updatedUserDetails
         if updatedUserDetails > 0:
@@ -227,9 +227,11 @@ class Storage(object):
             print "Failed to fetch user details"
             abort(500, "Other Errors - Update User Entry function")
 
+
     #
     # Enroll Courses
     #
+
     def enrollCourse(self, jsonData):
         # We need to append the team name with object ID in Django
 
@@ -272,40 +274,40 @@ class Storage(object):
     # Drop Course
     #
     def dropCourse(self, jsonData):
-        print "Drop course with course Id", jsonData['courseId'], "of the person with email ID", jsonData['email']
-        try:
-            from bson.objectid import ObjectId
-            objectId = ObjectId(jsonData['courseId'])
-        except:
-            print "Error: Id is invalid", sys.exc_traceback
-            respCode = 400
-            abort(400, respCode)
+            print "Drop course with course Id", jsonData['courseId'], "of the person with email ID", jsonData['email']
+            try:
+                from bson.objectid import ObjectId
+                objectId = ObjectId(jsonData['courseId'])
+            except:
+                print "Error: Id is invalid", sys.exc_traceback
+                respCode = 400
+                abort(400, respCode)
 
-        checkUserCount = self.uc.find({"email": jsonData['email'].strip("'")}).count() #, "enrolled": jsonData['courseId']}).count()
-        if checkUserCount > 0:
-            print "You are same Mooc user"
-            if self.uc.find({"email": jsonData['email'].strip("'"), "enrolled": jsonData['courseId']}):
-                jsonResp = Storage.updateUser_CourseEntry(self, jsonData, "dropEnrolledCourse")
-                print "Course Dropped Successfully"
-                return jsonResp
+            checkUserCount = self.uc.find({"email": jsonData['email'].strip("'")}).count() #, "enrolled": jsonData['courseId']}).count()
+            if checkUserCount > 0:
+                print "You are same Mooc user"
+                isFoundUser = self.uc.find({"email": jsonData['email'].strip("'"), "enrolled": jsonData['courseId']}).count()
+                if isFoundUser > 0:
+                    jsonResp = Storage.updateUser_CourseEntry(self, jsonData, "dropEnrolledCourse")
+                    print "Course Dropped Successfully"
+                    return jsonResp
+                else:
+                    print "User is not enrolled in the course - cannot drop the course"
+                    respCode = 500
+                    abort(500, respCode)
             else:
-                print "User is not enrolled in the course - cannot drop the course"
-                respCode = 500
-                abort(500, respCode)
-        else:
-            print "You are different mooc user"
-            from bson.objectid import ObjectId
-            objectid = ObjectId(jsonData['courseId'])
+                print "You are different mooc user"
+                from bson.objectid import ObjectId
+                objectid = ObjectId(jsonData['courseId'])
 
-            checkCourseEntry = self.cc.find({"enrolled": objectid}).count()
-            if checkCourseEntry > 0:
-                print "Course Dropped Successfully"
-                return {"id": jsonData['courseId'], "success": True}
-            else:
-                print "User is not enrolled in this course -- Cannot Drop the course"
-                respCode = 500
-                abort(500, respCode)
-                #return {"success": False}
+                checkCourseEntry = self.cc.find({"enrolled": objectid}).count()
+                if checkCourseEntry > 0:
+                    print "Course Dropped Successfully"
+                    return {"id": jsonData['courseId'], "success": True}
+                else:
+                    print "User is not enrolled in this course -- Cannot Drop the course"
+                    respCode = 500
+                    abort(500, respCode)
 
 
     # ______________________________________CATEGORY COLLECTIONS________________________________________
@@ -317,11 +319,9 @@ class Storage(object):
     def addCategory(self, jsonObj):
         print "Add Category------- mongo.py"
         name = jsonObj['name']
-        teamName = "RangersCategory:"
-        #obj_id = uuid.uuid4()
+        Team = "RangersCategory:"
         localtime = time.asctime(time.localtime(time.time()))
-        print localtime
-        #categoryId = teamName + str(objectId)
+        #print localtime
         duplicateCount = self.catc.find({"name": name.strip("'")}).count()
         if duplicateCount == 0:
             try:
@@ -341,21 +341,19 @@ class Storage(object):
                 print "error in adding Category: ", sys.exc_value
                 responseCategory = 500
                 abort(500, responseCategory)
-                #return {responseCategory: 500}
         else:
             print "Error: Duplicate Category found"
             responseCategory = 409
             abort(409, responseCategory)
-            #return {responseCategory: 409}
 
 
     #
     # Get Category
     #
 
-
-    def getCategory(self,categoryId):
+    def getCategory(self, categoryId):
         print "Get Category in mongo.py with category ID = ", categoryId
+        Team = "Rangers:"
         try:
             # Converting the String Type Category Id into Object Type Category Id
             from bson.objectid import ObjectId
@@ -365,7 +363,7 @@ class Storage(object):
             responseCode = 400
             abort(400, responseCode)
         checkCategoryEntry = self.catc.find({"_id": objectId}).count()
-        print "Category entry ", checkCategoryEntry
+        #print "Category entry ", checkCategoryEntry
         if checkCategoryEntry > 0:
             print "Sending the Category Details"
             categoryDetails = self.catc.find_one({"_id": objectId})
@@ -389,7 +387,7 @@ class Storage(object):
 
     def listCategory(self):
         print "List all category ---- Mongo.py"
-        Team = "Rangers:"
+        Team = "RangersCategory:"
         try:
             countCategory = self.catc.count()
             if countCategory > 0:
@@ -435,7 +433,7 @@ class Storage(object):
 
         print "Converted object Id from string to object = ", obj_id
         checkCourseEntry = self.cc.find({"_id": obj_id}).count()
-        print "course entry  = ",checkCourseEntry
+        print "course entry  = ", checkCourseEntry
         if checkCourseEntry > 0:
             try:
                 self.cc.update({"_id": obj_id}, {"$set": {"category": jsonData['category'], "term": jsonData['term'],"Description": jsonData['Description'], "title": jsonData['title'], "section": jsonData['section'],"days": jsonData['days'], "hours": jsonData['hours'], "dept": jsonData['dept'], "instructor": jsonData['instructor'], "attachment": jsonData['attachment'], "year": jsonData['year']}})
@@ -461,13 +459,13 @@ class Storage(object):
 
     def addCourse(self, jsonObj):
         print "Add course------- mongo.py", jsonObj
-        userEntryType = jsonObj['email']
+        userEntryType = jsonObj['instructor'][0]['email']
         print userEntryType
 
         # user is from other MOOC
         if userEntryType == "NotMyMooc":
             print "user is from different mooc", userEntryType
-            del jsonObj['email']
+            #del jsonObj['email']
             self.cc.insert(jsonObj)
             objectId = jsonObj['_id']
             objectIdStr = str(objectId)
@@ -479,7 +477,7 @@ class Storage(object):
         # True if user is in the list
         elif self.uc.find({"email": {"$in": [userEntryType]}}):
             print "User is of the same mooc", userEntryType
-            del jsonObj['email']
+            #del jsonObj['email']
             self.cc.insert(jsonObj)
             objectId = jsonObj['_id']
             objectIdStr = str(objectId)
@@ -613,20 +611,36 @@ class Storage(object):
     def addQuiz(self, jsonObj):
 
         print "Add quiz ---> mongo.py", jsonObj
-        if self.uc.find({"email": jsonObj['email']}):
+        Team = "RangersQuiz:"
+        from bson.objectid import ObjectId
+        try:
+            courseObjectId = ObjectId(jsonObj['courseId'])
+            print courseObjectId
+        except:
+            print "Invalid course Id ", sys.exc_traceback
+            respcode = 400
+            abort(400, respcode)
+
+        ifFoundCourse = self.cc.find({"_id": courseObjectId}).count()
+        if ifFoundCourse > 0:
             try:
                 self.qc.insert(jsonObj)
                 objectId = jsonObj['_id']
                 objectIdStr = str(objectId)
+                Obj_id = Team + objectIdStr
                 print objectIdStr
                 del jsonObj["_id"]
-                additionInfo = {"id": objectIdStr, "success": True}
-                responseAddQuiz = dict(additionInfo.items() + jsonObj.items())
-                return responseAddQuiz
+                additionInfo = {"quizId": Obj_id , "success": True}
+                finalResponseQuiz = dict(additionInfo.items() + jsonObj.items())
+                return finalResponseQuiz
             except:
                 print "Error: In adding quiz details", sys.exc_traceback
                 respcode = 500
                 abort(500, respcode)
+        else:
+            print "error: Course not found"
+            respcode = 404
+            abort(404, respcode)
 
     #
     #Get Quiz
@@ -735,8 +749,9 @@ class Storage(object):
     # "status": 0
     #}
     def addAnnouncement(self, jsonObj):
+
         print "Add announcement ---> mongo.py"
-        teamName = "RangersAnnouncement:"
+        Team = "RangersAnnouncement:"
         localtime = time.asctime(time.localtime(time.time()))
         from bson.objectid import ObjectId
         courseId = ObjectId(jsonObj['courseId'])
@@ -747,12 +762,12 @@ class Storage(object):
                 self.ac.insert(finalJsonObj)
                 print "Announcement added successfully"
                 objectIdStr = str(finalJsonObj['_id'])
-                announcementId = teamName + objectIdStr
+                announcementId = Team + objectIdStr
                 announcementId = {"AnnouncementId": announcementId}
                 responseAnnouncement = self.ac.find_one({"_id": finalJsonObj['_id']})
                 if len(responseAnnouncement) > 0:
                     del responseAnnouncement['_id']
-                    finalResponse  = dict(announcementId.items() + responseAnnouncement.items())
+                    finalResponse = dict(announcementId.items() + responseAnnouncement.items())
                     return finalResponse
                 else:
                     print "error: Announcement Entry _id invalid"
@@ -803,35 +818,37 @@ class Storage(object):
     # List all announcements
     #
     def listAnnouncement(self):
-        print "List all announcements ---- Mongo.py"
-        Team = "RangersAnnouncements:"
+        print "List all Announcement ---- Mongo.py"
+        Team = "RangersAnnouncement:"
         try:
-            countAnnouncements = self.ac.count()
-            print "Announcements count = ", countAnnouncements
-            if countAnnouncements > 0:
+            countAnn = self.ac.count()
+            if countAnn > 0:
                 annList = self.ac.find()
-                print annList
                 annListData = []
-                for data in  annList:
+                for data in annList:
                     objectId = data['_id']
                     objectIdStr = str(objectId)
                     annId = Team + objectIdStr
                     id = {'id': annId}
                     del data['_id']
                     data.update(id)
+                    print data
                     annListData.append(data)
-                    annListFinal = json.dumps(annListData)
-                    #print "Final announcement list JSON format", announcementListFinal
-                    return annListFinal
+                annListFinal = json.dumps(annListData)
+                return annListFinal
+            else:
+                print "No courses are present on the MOOC"
+                return {"success": False}
         except:
-            print "error: Internal Server Error", sys.exc_traceback
-            respcode = 500
-            abort(500, respcode)
+            #listCourses = "Other Errors"
+            print "error to get list details", sys.exc_info()[0]
+            abort(500, "Other Errors")
 
 
     #
     # Delete Announcement
     #
+
     def deleteAnnouncement(self, annId):
         print "Delete Announcement with ID = ", annId
         from bson.objectid import ObjectId
