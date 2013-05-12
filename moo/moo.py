@@ -161,13 +161,13 @@ def getUser(email):
 #
 # Update User - It updates the course entries of user like Enrolled courses, Own courses and Quizzes & Grades
 #
-#@route('/user', method ='PUT')
-#def updateUser_CourseEntry():
-#    print 'Update User Moo.py'
-#    jsonData = json.loads(request.body.read())
-#    if not jsonData:
-#       abort(400, 'No data received')
-#    return room.updateUser_CourseEntry(jsonData)
+@route('/user/update:email', method ='PUT')
+def updateUser(email):
+    print 'Update User Moo.py'
+    jsonData = json.loads(request.body.read())
+    if not jsonData:
+       abort(400, 'No data received')
+    return room.updateUser(jsonData, email)
 
 
 #
@@ -291,7 +291,7 @@ def listCourse():
 @route('/course/:courseId', method='GET')
 def getCourse(courseId):
     print "Get Course moo.py"
-    if not id:
+    if not courseId:
         abort(400, 'No Email Id specified')
     return room.getCourse(courseId)
 
@@ -302,8 +302,8 @@ def getCourse(courseId):
 @route('/course/:courseId', method = 'DELETE')
 def deleteCourse(courseId):
     print "Delete Course moo.py"
-    if not id:
-        abort(400, 'No Email Id specified')
+    if not courseId:
+        abort(400, 'No course Id specified')
     return room.deleteCourse(courseId)
 
 # _____________________________________________________________ QUIZZES __________________________
@@ -315,7 +315,8 @@ def deleteCourse(courseId):
 def addQuiz():
     print "Add Quiz----> Moo.py"
     jsonData = json.loads(request.body.read())
-    print "JSON VALUE MOO.PY = ", jsonData
+    if not jsonData:
+        abort(400, 'No jsonData specified')
     return room.addQuiz(jsonData)
 
 #
@@ -324,6 +325,8 @@ def addQuiz():
 @route('/quiz/:id', method = 'GET')
 def getQuiz(id):
     print "Get  Quiz----> Moo.py"
+    if not id:
+        abort(400, 'No id specified')
     return room.getQuiz(id)
 
 
@@ -341,6 +344,8 @@ def listQuiz():
 @route('/quiz/:id', method = 'DELETE')
 def deleteQuiz(id):
     print "Get Quiz moo.py"
+    if not id:
+        abort(400, 'No id specified')
     return room.deleteQuiz(id)
 
 # ___________________________________ANNOUNCEMENTS _______________________________________________
@@ -352,15 +357,17 @@ def deleteQuiz(id):
 def addAnnouncement():
     print "Add Announcement----> Moo.py"
     jsonData = json.loads(request.body.read())
+    if not jsonData:
+        abort(400, 'No jsonData specified')
     return room.addAnnouncement(jsonData)
 
 #
 # Get Announcement
 #
-@route('/announcement/:id' , method = 'GET')
-def getAnnouncement(id):
+@route('/announcement/:announcementId' , method = 'GET')
+def getAnnouncement(announcementId):
     print "Get  Announcement----> Moo.py"
-    return room.getAnnouncement(id)
+    return room.getAnnouncement(announcementId)
 
 
 #
