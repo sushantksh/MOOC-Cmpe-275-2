@@ -273,11 +273,18 @@ class Storage(object):
     #
     def dropCourse(self, jsonData):
         print "Drop course with course Id", jsonData['courseId'], "of the person with email ID", jsonData['email']
+        try:
+            from bson.objectid import ObjectId
+            objectId = ObjectId(jsonData['courseId'])
+        except:
+            print "Error: Id is invalid", sys.exc_traceback
+            respCode = 400
+            abort(400, respCode)
 
-        checkUserCount = self.uc.find({"email": jsonData['email'].strip("'"), "enrolled": jsonData['courseId']}).count()
+        checkUserCount = self.uc.find({"email": jsonData['email'].strip("'")}).count() #, "enrolled": jsonData['courseId']}).count()
         if checkUserCount > 0:
             print "You are same Mooc user"
-            if self.uc.find({"enrolled": jsonData['courseId']}):
+            if self.uc.find({"email": jsonData['email'].strip("'"), "enrolled": jsonData['courseId']}):
                 jsonResp = Storage.updateUser_CourseEntry(self, jsonData, "dropEnrolledCourse")
                 print "Course Dropped Successfully"
                 return jsonResp
@@ -802,7 +809,7 @@ class Storage(object):
             countAnnouncements = self.ac.count()
             print "Announcements count = ", countAnnouncements
             if countAnnouncements > 0:
-                annList = self.ac.find()[:]
+                annList = self.ac.find()
                 print annList
                 annListData = []
                 for data in  annList:
