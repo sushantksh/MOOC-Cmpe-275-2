@@ -479,7 +479,7 @@ class Storage(object):
             print objectIdStr
             jsonEntry = {"email": userEntryType, "courseId": objectIdStr}
             jsonResp = Storage.updateUser_CourseEntry(self, jsonEntry, "own")
-            return {"courseId": jsonResp['_id'], "success": True}
+            return {"courseId": jsonResp['id'], "success": True}
         else:
             print "Error: In adding the course"
             abort(500, "Other Errors")
@@ -657,7 +657,7 @@ class Storage(object):
     #
     def listQuiz(self):
         print "List all quizzes ---- Mongo.py"
-        Team = "Rangers:"
+        Team = "RangersQuizzes:"
         try:
             countQuizzes = self.qc.count()
             if countQuizzes > 0:
@@ -686,23 +686,33 @@ class Storage(object):
     #
     # Delete Quiz
     #
-    def deleteQuiz(self, id):
-        print "Delete Quiz with ID = ", id
+    def deleteQuiz(self, quizId):
+        print "Delete Quiz with ID = ", quizId
+        from bson.objectid import ObjectId
         try:
-            deleteCount = self.qc.find({"id": id}).count()
+            quizObjectId = ObjectId(quizId)
+        except:
+            print "Error: Quiz ID is Invalid", sys.exc_traceback
+            respcode = 400
+            abort(400, respcode)
+
+        try:
+            deleteCount = self.qc.find({"_id": quizObjectId}).count()
             if deleteCount > 0:
-                self.qc.remove({"id": id})
+                self.qc.remove({"_id": quizObjectId})
                 print "Delete successful"
-                return {"deleteQuiz":"success"}
+                return {"success": True}
             else:
-                print "error: Invalid ID - MONGO.py"
-                responseHandler = 400
-                return {"deleteQuiz": responseHandler}
+                print "error: quiz with quiz ID not found - MONGO.py"
+                respcode = 404
+                abort(404, respcode)
 
         except:
-            print "error: quiz not found - MONGO.py", sys.exc_traceback
+            print "error: Internal Server Error - MONGO.py", sys.exc_traceback
+            respcode = 500
+            abort(500, respcode)
 
-            return {"deleteQuiz":"failed"}
+
 
     #_____________________________ANNOUNCEMENTS__________________________________________
 
@@ -757,62 +767,89 @@ class Storage(object):
 
     def getAnnouncement(self, announcementId):
         print "Get announcement with announcement ID = " + announcementId
-        checkAnnouncementEntry = self.ac.find({"id": announcementId.strip("'")}).count()
-        print "Announcement entry ", checkAnnouncementEntry
+        from bson.objectid import ObjectId
+        try:
+            objectId = ObjectId(announcementId)
+        except:
+            print "Error: Id is invalid",sys.exc_traceback
+            respcode = 400
+            abort(400, respcode)
+        checkAnnouncementEntry = self.ac.find({"_id": objectId}).count()
+        #print "Announcement entry ", checkAnnouncementEntry
         if checkAnnouncementEntry > 0:
             print "Sending the Announcement Details"
-            announcementDetails = self.ac.find_one({"id": announcementId})
+            announcementDetails = self.ac.find_one({"_id": objectId})
             if len(announcementDetails) > 0:
                 print "send announcement details"
                 del announcementDetails['_id']
                 return announcementDetails
             else:
-                return {"announcementId": "Announcement not found"}
+                print "Error: 500 Internal Server error ----> mongo.py"
+                respcode = 500
+                abort(500, respcode)
         else:
-            print "Error in Getting announcement details ---> mongo.py"
-            return {"announcementId": "ID is invalid"}
-
+            print "Error: Aannouncement Id Not Found ---> mongo.py"
+            respcode = 404
+            abort(404, respcode)
 
     #
     # List all announcements
     #
     def listAnnouncement(self):
         print "List all announcements ---- Mongo.py"
+        Team = "RangersAnnouncements:"
         try:
-            announcementList = self.ac.find()
-            announcementListData = []
-            for data in announcementList:
-                del data['_id']
-                announcementListData.append(data)
-            #print "course list Array format", courseListData
-            announcementListFinal = json.dumps(announcementListData)
-            print "Final announcement list JSON format", announcementListFinal
-            return announcementListFinal
+            countAnnouncements = self.ac.count()
+            print "Announcements count = ", countAnnouncements
+            if countAnnouncements > 0:
+                annList = self.ac.find()[:]
+                print annList
+                annListData = []
+                for data in  annList:
+                    objectId = data['_id']
+                    objectIdStr = str(objectId)
+                    annId = Team + objectIdStr
+                    id = {'id': annId}
+                    del data['_id']
+                    data.update(id)
+                    annListData.append(data)
+                    annListFinal = json.dumps(annListData)
+                    #print "Final announcement list JSON format", announcementListFinal
+                    return annListFinal
         except:
-            print "error to get announcement list details", sys.exc_info()[0]
-            return {"listAnnouncements": "list retrieval failed"}
+            print "error: Internal Server Error", sys.exc_traceback
+            respcode = 500
+            abort(500, respcode)
+
 
     #
     # Delete Announcement
     #
-    def deleteAnnouncement(self, id):
-        print "Delete Announcement with ID = ", id
-        responseHandler = 0
+    def deleteAnnouncement(self, annId):
+        print "Delete Announcement with ID = ", annId
+        from bson.objectid import ObjectId
         try:
-            deleteCount = self.ac.find({"id": id}).count()
+            annObjectId = ObjectId(annId)
+        except:
+             print "error: announcement Id is Invalid - MONGO.py", sys.exc_traceback
+             respcode = 400
+             abort(400, respcode)
+
+        try:
+            deleteCount = self.ac.find({"_id": annObjectId}).count()
             if deleteCount > 0:
-                self.ac.remove({"id": id})
+                self.ac.remove({"_id": annObjectId})
                 print "Delete successful"
-                return {"deleteAnnouncement":"success"}
+                return {"success":True}
             else:
-                print "error: Invalid ID - MONGO.py"
-                responseHandler = 400
-                return {"deleteAnnouncement": responseHandler}
+                print "error: Announcement not found - MONGO.py"
+                respcode = 404
+                abort(404, respcode)
 
         except:
-            print "error: announcement not found - MONGO.py", sys.exc_traceback
-
-            return {"deleteAnnouncement":"failed"}
+            print "error: announcement Internal server error - MONGO.py", sys.exc_traceback
+            respcode = 500
+            abort(500, respcode)
 
     #_____________________________DISCUSSIONS__________________________________________
 

@@ -364,7 +364,7 @@ def addAnnouncement():
 #
 # Get Announcement
 #
-@route('/announcement/:announcementId' , method = 'GET')
+@route('/announcement/:announcementId', method = 'GET')
 def getAnnouncement(announcementId):
     print "Get  Announcement----> Moo.py"
     return room.getAnnouncement(announcementId)
@@ -381,10 +381,10 @@ def listAnnouncement():
 #
 # Delete Announcement
 #
-@route('/announcement/:id', method = 'DELETE')
-def deleteAnnouncement(id):
+@route('/announcement/delete/:annId', method = 'DELETE')
+def deleteAnnouncement(annId):
     print "Get Announcement moo.py"
-    return room.deleteAnnouncement(id)
+    return room.deleteAnnouncement(annId)
 
 # _____________________________________________________________ DISCUSSIONS __________________________
 

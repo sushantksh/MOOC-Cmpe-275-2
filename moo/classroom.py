@@ -240,23 +240,15 @@ class Room(object):
     #Get Announcement
     #
     def getAnnouncement(self, announcementId):
-        try:
-            print "room to stroage ------> Get Announcement"
-            return self.__store.getAnnouncement(announcementId)
-        except:
-            print "Error in Getting Announcement details ---> classroom.py"
-            return {"errorInQuery": "getAnnouncement"}
+        print "room to stroage ------> Get Announcement"
+        return self.__store.getAnnouncement(announcementId)
 
     #
     #List Announcement
     #
     def listAnnouncement(self):
-        try:
-            print "room to storage ------> List Announcement"
-            return self.__store.listAnnouncement()
-        except:
-            print "Error in  listing Announcement details ---> classroom.py"
-            return {"errorInQuery": "listAnnouncement"}
+        print "room to storage ------> List Announcement"
+        return self.__store.listAnnouncement()
 
     #
     # Delete Announcement
