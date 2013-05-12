@@ -292,8 +292,18 @@ def listCourse():
 def getCourse(courseId):
     print "Get Course moo.py"
     if not courseId:
-        abort(400, 'No Email Id specified')
+        abort(400, 'No course Id specified')
     return room.getCourse(courseId)
+
+#
+# Get owned courses of the user to run the functionalities of quizzes and announcements
+#
+@route('/course/own/:email', method='GET')
+def getOwnedCourses(email):
+    print "Get owned courses moo.py"
+    if not email:
+        abort(400, 'No email Id specified')
+    return room.getOwnedCourses(email)
 
 #
 # Delete Course
@@ -333,7 +343,7 @@ def getQuiz(id):
 #
 # List Quiz
 #
-@route('/quiz', method = 'GET')
+@route('/quiz/list', method = 'GET')
 def listQuiz():
     print 'List all quizes moo.py'
     return room.listQuiz()

@@ -461,12 +461,33 @@ class Storage(object):
         print "Add course------- mongo.py", jsonObj
         userEntryType = jsonObj['instructor'][0]['email']
         print userEntryType
+        if self.uc.find({"email": {"$in": [userEntryType]}}):
+            print "User is of the same mooc", userEntryType
+            #del jsonObj['email']
+            try:
+                self.cc.insert(jsonObj)
+            except:
+                print "Error: Internal server error", sys.exc_traceback
+                respcode = 500
+                abort(500, respcode)
+            objectId = jsonObj['_id']
+            objectIdStr = str(objectId)
+            print objectIdStr
+            jsonEntry = {"email": userEntryType, "courseId": objectIdStr}
+            jsonResp = Storage.updateUser_CourseEntry(self, jsonEntry, "own")
+            return {"courseId": jsonResp['id'], "success": True}
 
         # user is from other MOOC
-        if userEntryType == "NotMyMooc":
+        #userEntryType == "NotMyMooc":
+        else:
             print "user is from different mooc", userEntryType
             #del jsonObj['email']
-            self.cc.insert(jsonObj)
+            try:
+                self.cc.insert(jsonObj)
+            except:
+                print "Error: Internal server error", sys.exc_traceback
+                respcode = 500
+                abort(500, respcode)
             objectId = jsonObj['_id']
             objectIdStr = str(objectId)
             print objectIdStr
@@ -475,19 +496,18 @@ class Storage(object):
             return responseJson
 
         # True if user is in the list
-        elif self.uc.find({"email": {"$in": [userEntryType]}}):
-            print "User is of the same mooc", userEntryType
-            #del jsonObj['email']
-            self.cc.insert(jsonObj)
-            objectId = jsonObj['_id']
-            objectIdStr = str(objectId)
-            print objectIdStr
-            jsonEntry = {"email": userEntryType, "courseId": objectIdStr}
-            jsonResp = Storage.updateUser_CourseEntry(self, jsonEntry, "own")
-            return {"courseId": jsonResp['id'], "success": True}
-        else:
-            print "Error: In adding the course"
-            abort(500, "Other Errors")
+        #elif self.uc.find({"email": {"$in": [userEntryType]}}):
+        #    print "User is of the same mooc", userEntryType
+        #    self.cc.insert(jsonObj)
+        #    objectId = jsonObj['_id']
+        #    objectIdStr = str(objectId)
+        #    print objectIdStr
+        #    jsonEntry = {"email": userEntryType, "courseId": objectIdStr}
+        #   jsonResp = Storage.updateUser_CourseEntry(self, jsonEntry, "own")
+        #    return {"courseId": jsonResp['id'], "success": True}
+        #else:
+        #    print "Error: In adding the course"
+        #    abort(500, "Other Errors")
 
 
     #
@@ -561,6 +581,46 @@ class Storage(object):
             abort(404, respcode)
             #return {"courseId": "ID is invalid"}
 
+    #
+    # Get owned courses of the user to run the functionalities of quizzes and announcements
+    # This functionality works for same mooc user
+
+    def getOwnedCourses(self, email):
+        print "Get owned courses with email - ", email
+        Team = "Rangers:"
+        from bson.objectid import ObjectId
+        isUserPresent = self.uc.find({"email": email.strip("'")}).count()
+        if isUserPresent > 0:
+            ownCourseList = self.uc.find_one({"email": email})
+            ownCourseId = ownCourseList['own']
+            print ownCourseId
+            totalOwnIdCount = len(ownCourseId)
+            count = 0
+            jsonData = []
+            while count < totalOwnIdCount:
+                # converting the arrays of owned Id into object iD
+                try:
+                    obj_id = ObjectId(ownCourseId[count])
+                except:
+                    print "Id from own user collection is invalid", sys.exc_traceback
+                    respcode = 400
+                    abort(400, respcode)
+                # fetching details of courses with own course ID obtaied from usercollection own field
+                courseDetails = self.cc.find_one({"_id": obj_id})
+                courseIdFromCC = str(courseDetails['_id'])
+                ownCourseIdWithTeam = Team + courseIdFromCC
+                # creating the course Id Json with Team name appended
+                finalId = {'courseId': ownCourseIdWithTeam}
+                del courseDetails['_id']
+                finalCourseDetails = dict(finalId.items() + courseDetails.items())
+                jsonData.append(finalCourseDetails)
+                count = count + 1
+            finalJsonData = json.dumps(jsonData)
+            return finalJsonData
+        else:
+            print "error: user not found", sys.exc_traceback
+            respcode = 404
+            abort(404, respcode)
 
     #
     # Delete Course

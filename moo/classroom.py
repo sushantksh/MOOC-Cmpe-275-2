@@ -168,13 +168,8 @@ class Room(object):
     # Update Course
     #
     def updateCourse(self, jsonData, courseId):
-        respCode = 500
         print "Room to storage ----> update course"
-        #try:
         return self.__store.updateCourse(jsonData, courseId)
-        #except:
-         #   print "500 internal server error ---> classroom.py",sys.exc_traceback
-         #  abort(500, respCode)
 
 
     #
@@ -192,6 +187,14 @@ class Room(object):
     def getCourse(self, courseId):
         print "room to stroage ------> Get Course"
         return self.__store.getCourse(courseId)
+
+
+    #
+    # Get owned courses of the user to run the functionalities of quizzes and announcements
+    #
+    def getOwnedCourses(self, email):
+        print "room to storage ---------> Get owned Courses"
+        return self.__store.getOwnedCourses(email)
 
     #
     # Delete Course
