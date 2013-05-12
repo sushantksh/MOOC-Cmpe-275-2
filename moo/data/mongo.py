@@ -167,7 +167,6 @@ class Storage(object):
 
     def updateUser_CourseEntry(self, jsonObj, EntryType):
         print "Updating the user details -> mongo.py", jsonObj['email']
-        #try:
         #
         # We need only the single values in own , enroll , quizzes (quizzes will have dictionary of quizId & grade)
         #
@@ -236,6 +235,9 @@ class Storage(object):
         # We need to append the team name with object ID in Django
 
         print "Enroll Course of person with email ID", jsonData['email'], "with Course ID", jsonData['courseId']
+        Team = "Rangers:"
+        appendedCourseId = Team + jsonData['courseId']
+        print appendedCourseId
         try:
             from bson.objectid import ObjectId
             objectId = ObjectId(jsonData['courseId'])
@@ -247,12 +249,16 @@ class Storage(object):
             if self.uc.find({"email": jsonData['email']}):
                 print " You are same mooc user "
             # Check whether the user is already enrolled in the course or not
-                checkDuplicate_CourseEntry = self.uc.find({"email": jsonData['email'].strip("'"), "enrolled": jsonData['courseId'].strip("'")}).count()
+                checkDuplicate_CourseEntry = self.uc.find({"email": jsonData['email'].strip("'"), "enrolled": appendedCourseId}).count()
                 if checkDuplicate_CourseEntry == 0:
                     #
                     # Calling updateUser_CourseEntry function
                     #
-                    jsonResp = Storage.updateUser_CourseEntry(self, jsonData, "enrolled")
+                    #
+                    finalCourseId = {"courseId": appendedCourseId.strip("'")}
+                    del jsonData['courseId']
+                    jsonPacket = dict(jsonData.items() + finalCourseId.items())
+                    jsonResp = Storage.updateUser_CourseEntry(self, jsonPacket, "enrolled")
                     print "Course has been enrolled successfully"
                     return jsonResp
                 else:
@@ -262,7 +268,7 @@ class Storage(object):
                 #return {"success": False}
             else:
                 print "You are different mooc user"
-                return {"id": jsonData['courseId'], "success": True}
+                return {"id": appendedCourseId, "success": True}
         else:
             print "Error: Course not found", sys.exc_traceback
             respCode = 404
@@ -273,6 +279,7 @@ class Storage(object):
     #
     # Drop Course
     #
+
     def dropCourse(self, jsonData):
             print "Drop course with course Id", jsonData['courseId'], "of the person with email ID", jsonData['email']
             try:
@@ -283,7 +290,7 @@ class Storage(object):
                 respCode = 400
                 abort(400, respCode)
 
-            checkUserCount = self.uc.find({"email": jsonData['email'].strip("'")}).count() #, "enrolled": jsonData['courseId']}).count()
+            checkUserCount = self.uc.find({"email": jsonData['email'].strip("'")}).count()
             if checkUserCount > 0:
                 print "You are same Mooc user"
                 isFoundUser = self.uc.find({"email": jsonData['email'].strip("'"), "enrolled": jsonData['courseId']}).count()
@@ -452,16 +459,16 @@ class Storage(object):
 
     #
     # Add Course - need to check at Django whether the user belongs to different Mooc or Default Mooc
-    # If user is of same mooc append the email id to the Json else send {"email" : "NotMyMooc"}
+    #
     # We need a Team/MOOC Name from sqlite to append it to the courseId
-    # need to append the
-    # TEST WITH TWO THINGS WITH JSON "email": "NotMyMooc" & "email": Valid EmailId of Same Mooc
 
     def addCourse(self, jsonObj):
         print "Add course------- mongo.py", jsonObj
+        Team = "Rangers:"
         userEntryType = jsonObj['instructor'][0]['email']
         print userEntryType
-        if self.uc.find({"email": {"$in": [userEntryType]}}):
+        checkUserEntry = self.uc.find({"email": userEntryType.strip("'")}).count()
+        if checkUserEntry > 0:
             print "User is of the same mooc", userEntryType
             #del jsonObj['email']
             try:
@@ -472,13 +479,14 @@ class Storage(object):
                 abort(500, respcode)
             objectId = jsonObj['_id']
             objectIdStr = str(objectId)
-            print objectIdStr
-            jsonEntry = {"email": userEntryType, "courseId": objectIdStr}
-            jsonResp = Storage.updateUser_CourseEntry(self, jsonEntry, "own")
-            return {"courseId": jsonResp['id'], "success": True}
+            finalCourseId = Team + objectIdStr
+            #print objectIdStr
+            jsonEntry = {"email": userEntryType, "courseId": finalCourseId}
+            #jsonResp =
+            Storage.updateUser_CourseEntry(self, jsonEntry, "own")
+            return {"courseId": finalCourseId, "success": True}
 
         # user is from other MOOC
-        #userEntryType == "NotMyMooc":
         else:
             print "user is from different mooc", userEntryType
             #del jsonObj['email']
@@ -490,24 +498,8 @@ class Storage(object):
                 abort(500, respcode)
             objectId = jsonObj['_id']
             objectIdStr = str(objectId)
-            print objectIdStr
-            del jsonObj["_id"]
-            responseJson = {"courseId": objectIdStr, "success": True}
-            return responseJson
-
-        # True if user is in the list
-        #elif self.uc.find({"email": {"$in": [userEntryType]}}):
-        #    print "User is of the same mooc", userEntryType
-        #    self.cc.insert(jsonObj)
-        #    objectId = jsonObj['_id']
-        #    objectIdStr = str(objectId)
-        #    print objectIdStr
-        #    jsonEntry = {"email": userEntryType, "courseId": objectIdStr}
-        #   jsonResp = Storage.updateUser_CourseEntry(self, jsonEntry, "own")
-        #    return {"courseId": jsonResp['id'], "success": True}
-        #else:
-        #    print "Error: In adding the course"
-        #    abort(500, "Other Errors")
+            finalCourseId = Team + objectIdStr
+            return {"courseId": finalCourseId, "success": True}
 
 
     #
@@ -600,9 +592,10 @@ class Storage(object):
             while count < totalOwnIdCount:
                 # converting the arrays of owned Id into object iD
                 try:
-                    obj_id = ObjectId(ownCourseId[count])
+                    numberValueOfId = ownCourseId[count][8:]
+                    obj_id = ObjectId(numberValueOfId)
                 except:
-                    print "Id from own user collection is invalid", sys.exc_traceback
+                    print "Id from own user collection is invalid", sys.exc_traceback()
                     respcode = 400
                     abort(400, respcode)
                 # fetching details of courses with own course ID obtaied from usercollection own field
