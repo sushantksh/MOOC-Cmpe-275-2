@@ -1004,7 +1004,7 @@ class Storage(object):
 
     def deleteAnnouncement(self, annId):
         print "Delete Announcement with ID = ", annId
-        # spllting the announcement Id to get the Team name and announcement id in string format
+        # splitting the announcement Id to get the Team name and announcement id in string format
         splitAnnId = annId.split(":")
 
         annObjId = splitAnnId[1]
@@ -1014,7 +1014,7 @@ class Storage(object):
         try:
             objectId = ObjectId(annObjId)
         except:
-             print "error: announcement Id is Invalid - MONGO.py", sys.exc_traceback
+             print "error: announcement Id is Invalid - MONGO.py", sys.exc_traceback()
              respcode = 400
              abort(400, respcode)
 
@@ -1030,7 +1030,7 @@ class Storage(object):
                 abort(404, respcode)
 
         except:
-            print "error: announcement Internal server error - MONGO.py", sys.exc_traceback
+            print "error: announcement Internal server error - MONGO.py", sys.exc_traceback()
             respcode = 500
             abort(500, respcode)
 
@@ -1099,57 +1099,68 @@ class Storage(object):
     #Get Discussion
     #
     def getDiscussion(self, courseId):
-        print "Get discussions with course id = " + courseId
-
-        # splitting the announcement Id to get the Team name and announcement id in string format
-        splitCourseId = courseId.split(":")
-
-        courseObjId = splitCourseId[1]
-        Team = splitCourseId[0]
-
-        from bson.objectid import ObjectId
+        print "List all Discussion based on course ID---- Mongo.py",courseId
+        Team = "Rangersdiscussion:"
         try:
-            courseObjectId = ObjectId(courseObjId)
-        except:
-            print "Error: Id is invalid", sys.exc_traceback()
-            respcode = 400
-            abort(400, respcode)
-
-        checkCourseEntry = self.cc.find({'_id': courseObjectId}).count()
-        if checkCourseEntry > 0:
-            print "Course is currently active online"
-            courseDiscussionList = self.dc.find({'courseId': courseId})
-            if courseDiscussionList > 0:
-                print "Sending the discussion list of course Id", courseId
-                del courseDiscussionList['_id']
-                print courseDiscussionList
-                return courseDiscussionList
+            print "1"
+            countDis = self.dc.count()
+            print "2"
+            if countDis > 0:
+                disList = self.dc.find({"courseId": courseId})
+                print "3"
+                disListData = []
+                for data in disList:
+                    objectId = data['_id']
+                    objectIdStr = str(objectId)
+                    disId = Team + objectIdStr
+                    Id = {'disId': disId}
+                    del data['_id']
+                    data.update(Id)
+                    print data
+                    disListData.append(data)
+                disListFinal = json.dumps(disListData)
+                return disListFinal
             else:
-                print "Error: 500 Internal Server error in get discussion----> mongo.py"
-                respcode = 500
-                abort(500, respcode)
-        else:
-            print "Error: course Id Not Found ---> mongo.py"
-            respcode = 404
-            abort(404, respcode)
+                print "No discussion is present for course ID in the MOOC"
+                return {"success": False}
+        except:
+            print "error to get list details", sys.exc_info()[0]
+            abort(500, "Other Errors")
+
 
     #
     # Delete Discussion
     #
-    def deleteDiscussion(self, id):
-        print "Delete Discussion with ID = ", id
-        responseHandler = 0
-        try:
-            deleteCount = self.dc.find({"id": id}).count()
-            if deleteCount > 0:
-                self.dc.remove({"id": id})
-                print "Delete successful"
-                return {"deleteDiscussion":"success"}
-            else:
-                print "error: Invalid ID - MONGO.py"
-                responseHandler = 400
-                return {"deleteDiscussion": responseHandler}
-        except:
-            print "error: discussion not found - MONGO.py", sys.exc_traceback
+    def deleteDiscussion(self, discussionId):
+        print "Delete Discussion with ID = ", discussionId
 
-            return {"deleteDiscussion":"failed"}
+        # splitting the announcement Id to get the Team name and announcement id in string format
+        splitDisId = discussionId.split(":")
+
+        disObjId = splitDisId[1]
+        Team = splitDisId[0]
+
+        from bson.objectid import ObjectId
+        try:
+            objectId = ObjectId(disObjId)
+        except:
+             print "error: discussion Id is Invalid - MONGO.py", sys.exc_traceback()
+             respcode = 400
+             abort(400, respcode)
+
+        try:
+            disCount = self.dc.find({"_id": objectId})
+
+            if disCount > 0:
+                self.dc.remove({"_id": objectId})
+                print "Delete discussion successful"
+                return {"success": True}
+            else:
+                print "error: discussion not found - MONGO.py"
+                respcode = 404
+                abort(404, respcode)
+
+        except:
+            print "error: discussion Internal server error - MONGO.py", sys.exc_traceback()
+            respcode = 500
+            abort(500, respcode)
