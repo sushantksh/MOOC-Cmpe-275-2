@@ -738,7 +738,7 @@ class Storage(object):
                     Obj_id = Team + "quiz" + ":" + objectIdStr
                     del quizDetails["_id"]
                     additionInfo = {"quizId": Obj_id, "success": True}
-                    finalResponseQuiz = dict(additionInfo.items() + jsonObj.items())
+                    finalResponseQuiz = dict(additionInfo.items() + quizDetails.items())
                     return finalResponseQuiz
 
                 except:
@@ -1103,12 +1103,9 @@ class Storage(object):
         print "List all Discussion based on course ID---- Mongo.py",courseId
         Team = "Rangersdiscussion:"
         try:
-            print "1"
             countDis = self.dc.count()
-            print "2"
             if countDis > 0:
                 disList = self.dc.find({"courseId": courseId})
-                print "3"
                 disListData = []
                 for data in disList:
                     objectId = data['_id']
