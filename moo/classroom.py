@@ -273,12 +273,8 @@ class Room(object):
     #Get Discussion
     #
     def getDiscussion(self, discussionId):
-        try:
-            print "room to stroage ------> Get Discussion"
-            return self.__store.getDiscussion(discussionId)
-        except:
-            print "Error in Getting Discussion details ---> classroom.py"
-            return {"errorInQuery": "getDiscussion"}
+        print "room to stroage ------> Get Discussion"
+        return self.__store.getDiscussion(discussionId)
 
     #
     #List Discussion

@@ -401,11 +401,11 @@ def deleteAnnouncement(annId):
 #
 # Add Discussion
 #
-@route('/discussion' , method = 'POST')
+@route('/discussions', method = 'POST')
 def addDiscussion():
     print "Add Discussion----> Moo.py"
     jsonData = json.loads(request.body.read())
-    print "JSON VALUE MOO.PY = ", jsonData
+    #print "JSON VALUE MOO.PY = ", jsonData
     return room.addDiscussion(jsonData)
 
 #

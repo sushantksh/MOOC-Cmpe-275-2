@@ -235,16 +235,23 @@ class Storage(object):
         # We need to append the team name with object ID in Django
 
         print "Enroll Course of person with email ID", jsonData['email'], "with Course ID", jsonData['courseId']
-        Team = "Rangers:"
-        appendedCourseId = Team + jsonData['courseId']
+
+        # splitting the course Id into Team Name and course id string format
+        splitCourseId = jsonData['courseId'].split(":")
+        Team = splitCourseId[0]
+        courseStrId = splitCourseId[1]
+
+        appendedCourseId = jsonData['courseId']
         print appendedCourseId
+
         try:
             from bson.objectid import ObjectId
-            objectId = ObjectId(jsonData['courseId'])
+            objectId = ObjectId(courseStrId)
         except:
             print "Error: Id is invalid", sys.exc_traceback
             respCode = 400
             abort(400, respCode)
+
         if self.cc.find({"_id": objectId}):
             if self.uc.find({"email": jsonData['email']}):
                 print " You are same mooc user "
@@ -282,9 +289,15 @@ class Storage(object):
 
     def dropCourse(self, jsonData):
             print "Drop course with course Id", jsonData['courseId'], "of the person with email ID", jsonData['email']
+
+            # splitting the course Id into Team Name and course id string format
+            splitCourseId = jsonData['courseId'].split(":")
+            Team = splitCourseId[0]
+            courseStrId = splitCourseId[1]
+
             try:
                 from bson.objectid import ObjectId
-                objectId = ObjectId(jsonData['courseId'])
+                objectId = ObjectId(courseStrId)
             except:
                 print "Error: Id is invalid", sys.exc_traceback
                 respCode = 400
@@ -360,11 +373,17 @@ class Storage(object):
 
     def getCategory(self, categoryId):
         print "Get Category in mongo.py with category ID = ", categoryId
-        Team = "Rangers:"
+
+        # splitting the category Id into Team Name and course id string format
+
+        splitCategoryId = categoryId.split(":")
+        Team = splitCategoryId[0]
+        categoryStrId = splitCategoryId[1]
+
         try:
             # Converting the String Type Category Id into Object Type Category Id
             from bson.objectid import ObjectId
-            objectId = ObjectId(categoryId)
+            objectId = ObjectId(categoryStrId)
         except:
             print "Error: The ID is invalid", sys.exc_traceback
             responseCode = 400
@@ -382,7 +401,6 @@ class Storage(object):
                 print "Error: Category not found", sys.exc_traceback
                 responseCode = 500
                 abort(500, responseCode)
-                #return {"500": "Internal server error"}
         else:
             print "Error: Category not found", sys.exc_traceback
             responseCode = 404
@@ -428,13 +446,19 @@ class Storage(object):
     # Update Course
     #
     def updateCourse(self, jsonData, courseId):
-        print "Update Course with email ", courseId
-        #respCode = 200
+        print "Update Course with courseId"
+
+        # splitting the course Id into Team Name and course id string format
+
+        splitCourseId = courseId.split(":")
+        Team = splitCourseId[0]
+        courseStrId = splitCourseId[1]
+        print "String Course Id = ", courseStrId + "Team Name", Team
         from bson.objectid import ObjectId
         try:
-            obj_id = ObjectId(courseId)
+            obj_id = ObjectId(courseStrId)
         except:
-            print "Error: Not a valid Object ID", sys.exc_traceback
+            print "Error: Not a valid Object ID", sys.exc_traceback()
             respCode = 500
             abort(500, respCode)
 
@@ -541,10 +565,14 @@ class Storage(object):
 
     def getCourse(self, courseId):
         print "Get Course with course ID = ", courseId
-        Team = "Rangers:"
+
+        # splitting the course Id into Team Name and course id string format
+        splitCourseId = courseId.split(":")
+        Team = splitCourseId[0]
+        courseStrId = splitCourseId[1]
         try:
             from bson.objectid import ObjectId
-            obj_id = ObjectId(courseId)
+            obj_id = ObjectId(courseStrId)
         except:
             print "Error: Id is invalid", sys.exc_traceback
             respcode = 400
@@ -557,7 +585,7 @@ class Storage(object):
             print courseDetails
             if len(courseDetails) > 0:
                 print "send course details"
-                courseIdWithTeam = Team + courseId
+                courseIdWithTeam = Team + ":" + courseId
                 id = {'courseId': courseIdWithTeam}
                 del courseDetails['_id']
                 finalCourseDetails = dict(courseDetails.items() + id.items())
@@ -577,9 +605,9 @@ class Storage(object):
     # Get owned courses of the user to run the functionalities of quizzes and announcements
     # This functionality works for same mooc user
 
+
     def getOwnedCourses(self, email):
         print "Get owned courses with email - ", email
-        Team = "Rangers:"
         from bson.objectid import ObjectId
         isUserPresent = self.uc.find({"email": email.strip("'")}).count()
         if isUserPresent > 0:
@@ -592,8 +620,12 @@ class Storage(object):
             while count < totalOwnIdCount:
                 # converting the arrays of owned Id into object iD
                 try:
-                    numberValueOfId = ownCourseId[count][8:]
-                    obj_id = ObjectId(numberValueOfId)
+                    numberValueOfId = ownCourseId[count]
+                    print numberValueOfId
+                    # splitting the obtained course ID to get Team name and object Id in string format
+                    splitCourseId = numberValueOfId.split(":")
+                    print splitCourseId[1]
+                    obj_id = ObjectId(splitCourseId[1])
                 except:
                     print "Id from own user collection is invalid", sys.exc_traceback()
                     respcode = 400
@@ -601,7 +633,8 @@ class Storage(object):
                 # fetching details of courses with own course ID obtaied from usercollection own field
                 courseDetails = self.cc.find_one({"_id": obj_id})
                 courseIdFromCC = str(courseDetails['_id'])
-                ownCourseIdWithTeam = Team + courseIdFromCC
+                Team = splitCourseId[0]
+                ownCourseIdWithTeam = Team + ":" + courseIdFromCC
                 # creating the course Id Json with Team name appended
                 finalId = {'courseId': ownCourseIdWithTeam}
                 del courseDetails['_id']
@@ -621,9 +654,13 @@ class Storage(object):
 
     def deleteCourse(self, courseId):
         print "Delete Course with ID = ", courseId
+        # splitting the course Id into Team Name and course id string format
+        splitCourseId = courseId.split(":")
+        Team = splitCourseId[0]
+        courseStrId = splitCourseId[1]
         try:
             from bson.objectid import ObjectId
-            obj_id = ObjectId(courseId)
+            obj_id = ObjectId(courseStrId)
         except:
             print "Error: Id Is Invalid", sys.exc_traceback
             responseHandler = 400
@@ -661,36 +698,75 @@ class Storage(object):
     #
     # Add Quiz
     #
+
     def addQuiz(self, jsonObj):
 
-        print "Add quiz ---> mongo.py", jsonObj
-        Team = "RangersQuiz:"
+        print "Add quiz ---> mongo.py"
+
+        # splitting the obtained course Id from the front end to split into Team Name and
+        splitCourseId = jsonObj['courseId'].split(":")
+
+        # splitCourseId is a array that contains Team name at 0th position and courseId at 1th position
+        Team = splitCourseId[0]
+
         from bson.objectid import ObjectId
         try:
-            courseObjectId = ObjectId(jsonObj['courseId'])
-            print courseObjectId
+            courseObjectId = ObjectId(splitCourseId[1])
+            #print courseObjectId
         except:
-            print "Invalid course Id ", sys.exc_traceback
+            print "Invalid course Id "
+            print sys.exc_traceback()
             respcode = 400
             abort(400, respcode)
 
+        print "Is the course still available online"
         ifFoundCourse = self.cc.find({"_id": courseObjectId}).count()
         if ifFoundCourse > 0:
-            try:
-                self.qc.insert(jsonObj)
-                objectId = jsonObj['_id']
-                objectIdStr = str(objectId)
-                Obj_id = Team + objectIdStr
-                print objectIdStr
-                del jsonObj["_id"]
-                additionInfo = {"quizId": Obj_id , "success": True}
-                finalResponseQuiz = dict(additionInfo.items() + jsonObj.items())
-                return finalResponseQuiz
-            except:
-                print "Error: In adding quiz details", sys.exc_traceback
-                respcode = 500
-                abort(500, respcode)
+            findCourseInQuiz = self.qc.find_one({"courseId": jsonObj['courseId'].strip("'")})
+            print "Quiz details - When quizzes are already present of a course", findCourseInQuiz
+            if findCourseInQuiz != None:
+
+                try:
+                    print "Course entry with quiz details already present"
+                    self.qc.update({"courseId": jsonObj['courseId'].strip("'")}, {"$addToSet": {"questions": jsonObj['questions'][0]}})
+                    self.qc.update({"courseId": jsonObj['courseId'].strip("'")}, {"$addToSet": {"questions": jsonObj['questions'][1]}})
+                    print "details updated in already present courseId and quiz"
+                    quizDetails = self.qc.find_one({"courseId": jsonObj['courseId'].strip("'")})
+                    objectId = quizDetails['_id']
+                    objectIdStr = str(objectId)
+                    Obj_id = Team + "quiz" + ":" + objectIdStr
+                    del quizDetails["_id"]
+                    additionInfo = {"quizId": Obj_id, "success": True}
+                    finalResponseQuiz = dict(additionInfo.items() + jsonObj.items())
+                    return finalResponseQuiz
+
+                except:
+                    print "Error: In adding quiz details", sys.exc_traceback
+                    respcode = 500
+                    abort(500, respcode)
+
+            else:
+
+                try:
+
+                    print "This course never had a quiz added - Adding it for first time"
+                    self.qc.insert(jsonObj)
+                    objectId = jsonObj['_id']
+                    objectIdStr = str(objectId)
+                    Obj_id = Team + "quiz" + ":" + objectIdStr
+                    del jsonObj["_id"]
+                    additionInfo = {"quizId": Obj_id, "success": True}
+                    finalResponseQuiz = dict(additionInfo.items() + jsonObj.items())
+                    return finalResponseQuiz
+
+                except:
+
+                    print "Error: In adding quiz details", sys.exc_traceback
+                    respcode = 500
+                    abort(500, respcode)
+
         else:
+
             print "error: Course not found"
             respcode = 404
             abort(404, respcode)
@@ -698,11 +774,19 @@ class Storage(object):
     #
     #Get Quiz
     #
+
     def getQuiz(self, quizId):
         print "Get quiz with quiz ID = " + quizId
+
+        # splitting the course Id into Team Name and course id string format
+
+        splitQuizId = quizId.split(":")
+        Team = splitQuizId[0]
+        quizStrId = splitQuizId[1]
+
         from bson.objectid import ObjectId
         try:
-            objectId = ObjectId(quizId)
+            objectId = ObjectId(quizStrId)
         except:
             print "Error: ID is Invalid", sys.exc_traceback
             respcode = 400
@@ -710,7 +794,7 @@ class Storage(object):
         checkQuizEntry = self.qc.find({"_id": objectId}).count()
         print "Quiz entry", checkQuizEntry
         if checkQuizEntry > 0:
-            print "Sending the Quiz Details"
+            #print "Sending the Quiz Details"
             quizDetails = self.qc.find_one({"_id": objectId})
             if len(quizDetails) > 0:
                 print "send quiz details"
@@ -729,6 +813,7 @@ class Storage(object):
     #
     # List all quizes
     #
+
     def listQuiz(self):
         print "List all quizzes ---- Mongo.py"
         Team = "RangersQuizzes:"
@@ -741,7 +826,7 @@ class Storage(object):
                     objectId = data['_id']
                     objectIdStr = str(objectId)
                     quizId = Team + objectIdStr
-                    id = {'id': quizId}
+                    id = {'quizId': quizId}
                     del data['_id']
                     data.update(id)
                     print data
@@ -761,10 +846,17 @@ class Storage(object):
     # Delete Quiz
     #
     def deleteQuiz(self, quizId):
+
         print "Delete Quiz with ID = ", quizId
+
+        # splitting the course Id into Team Name and course id string format
+
+        splitQuizId = quizId.split(":")
+        Team = splitQuizId[0]
+        quizStrId = splitQuizId[1]
         from bson.objectid import ObjectId
         try:
-            quizObjectId = ObjectId(quizId)
+            quizObjectId = ObjectId(quizStrId)
         except:
             print "Error: Quiz ID is Invalid", sys.exc_traceback
             respcode = 400
@@ -804,18 +896,19 @@ class Storage(object):
     def addAnnouncement(self, jsonObj):
 
         print "Add announcement ---> mongo.py"
-        Team = "RangersAnnouncement:"
         localtime = time.asctime(time.localtime(time.time()))
+        splitCourseId = jsonObj['courseId'].split(":")
         from bson.objectid import ObjectId
-        courseId = ObjectId(jsonObj['courseId'])
-        if self.cc.find({"courseId": courseId}):
+        courseId = ObjectId(splitCourseId[1])
+        checkCourseEntry = self.cc.find({"_id": courseId}).count()
+        if checkCourseEntry > 0:
             try:
                 additionalInfo = {"postDate": localtime, "status": 1}
                 finalJsonObj = dict(jsonObj.items() + additionalInfo.items())
                 self.ac.insert(finalJsonObj)
                 print "Announcement added successfully"
                 objectIdStr = str(finalJsonObj['_id'])
-                announcementId = Team + objectIdStr
+                announcementId = splitCourseId[0] + "announcement" + ":" + objectIdStr
                 announcementId = {"AnnouncementId": announcementId}
                 responseAnnouncement = self.ac.find_one({"_id": finalJsonObj['_id']})
                 if len(responseAnnouncement) > 0:
@@ -842,15 +935,22 @@ class Storage(object):
 
     def getAnnouncement(self, announcementId):
         print "Get announcement with announcement ID = " + announcementId
+
+        # splitting the announcement Id to get the Team name and announcement id in string format
+        splitAnnId = announcementId.split(":")
+
+        annObjId = splitAnnId[1]
+        Team = splitAnnId[0]
+
         from bson.objectid import ObjectId
         try:
-            objectId = ObjectId(announcementId)
+            objectId = ObjectId(annObjId)
         except:
             print "Error: Id is invalid",sys.exc_traceback
             respcode = 400
             abort(400, respcode)
         checkAnnouncementEntry = self.ac.find({"_id": objectId}).count()
-        #print "Announcement entry ", checkAnnouncementEntry
+
         if checkAnnouncementEntry > 0:
             print "Sending the Announcement Details"
             announcementDetails = self.ac.find_one({"_id": objectId})
@@ -872,7 +972,7 @@ class Storage(object):
     #
     def listAnnouncement(self):
         print "List all Announcement ---- Mongo.py"
-        Team = "RangersAnnouncement:"
+        Team = "Rangersannouncement:"
         try:
             countAnn = self.ac.count()
             if countAnn > 0:
@@ -882,9 +982,9 @@ class Storage(object):
                     objectId = data['_id']
                     objectIdStr = str(objectId)
                     annId = Team + objectIdStr
-                    id = {'id': annId}
+                    Id = {'annId': annId}
                     del data['_id']
-                    data.update(id)
+                    data.update(Id)
                     print data
                     annListData.append(data)
                 annListFinal = json.dumps(annListData)
@@ -904,20 +1004,26 @@ class Storage(object):
 
     def deleteAnnouncement(self, annId):
         print "Delete Announcement with ID = ", annId
+        # spllting the announcement Id to get the Team name and announcement id in string format
+        splitAnnId = annId.split(":")
+
+        annObjId = splitAnnId[1]
+        Team = splitAnnId[0]
+
         from bson.objectid import ObjectId
         try:
-            annObjectId = ObjectId(annId)
+            objectId = ObjectId(annObjId)
         except:
              print "error: announcement Id is Invalid - MONGO.py", sys.exc_traceback
              respcode = 400
              abort(400, respcode)
 
         try:
-            deleteCount = self.ac.find({"_id": annObjectId}).count()
+            deleteCount = self.ac.find({"_id": objectId}).count()
             if deleteCount > 0:
-                self.ac.remove({"_id": annObjectId})
+                self.ac.remove({"_id": objectId})
                 print "Delete successful"
-                return {"success":True}
+                return {"success": True}
             else:
                 print "error: Announcement not found - MONGO.py"
                 respcode = 404
@@ -933,65 +1039,99 @@ class Storage(object):
     #
     # Add Discussion
     #
+    # {
+    # "course_id": "Rangers:519057591d41c8248488584c",
+    # "title": "When will be the final Exam?",
+    # "created_by": "email"
+    # }
+
+    #
+    #
     def addDiscussion(self, jsonObj):
         print "Add discussion ---> mongo.py"
-        teamName = "RangersDiscussion:"
-        discussionEntriesCount = self.dc.count() + 1
-        print "discussionEntriesCount + 1 = ", discussionEntriesCount
-        discussionId = teamName + str(discussionEntriesCount)
-        discussionIdDict = {"id": discussionId}
+
+        # This will update the postDate of the user discussion
+        localtime = time.asctime(time.localtime(time.time()))
+
+        # Splitting the course id to obtain the Team name and CourseId in string format
+        splitCourseId = jsonObj['courseId'].split(":")
+        courseObjId = splitCourseId[1]
+        Team = splitCourseId[0]
+
+        from bson.objectid import ObjectId
         try:
-            print "I am in try of insert"
-            jsonEntry = dict(discussionIdDict.items() + jsonObj.items())
-            print "Json Entry is = ", jsonEntry
-            self.dc.insert(jsonEntry)
-            print "discussion added successfully"
-            del jsonEntry["_id"]
-            return jsonEntry
+            objectId = ObjectId(courseObjId)
         except:
-            print "error in adding discussion: ", sys.exc_info()[0]
-            return {"addDiscussion": "discussion addition Failed"}
+            print "Error: Course Id is invalid", sys.exc_traceback()
+            respCode = 400
+            abort(400, respCode)
+        checkCourseEntry = self.cc.find({"_id": objectId}).count()
+        if checkCourseEntry > 0:
+            try:
+                additionalInfo = {"created_at": localtime, "updated_at": localtime}
+                print "Created at and updated at ", additionalInfo
+                finalJsonObj = dict(jsonObj.items() + additionalInfo.items())
+                self.dc.insert(finalJsonObj)
+                print "Discussion added successfully"
+                #objectIdStr = str(finalJsonObj['_id'])
+                discussionId = Team + "discussion" + ":" + courseObjId
+                Id = {"discussionId": discussionId}
+                responsediscussion = self.dc.find_one({"_id": finalJsonObj['_id']})
+                if len(responsediscussion) > 0:
+                    del responsediscussion['_id']
+                    finalResponse = dict(Id.items() + responsediscussion.items())
+                    return finalResponse
+                else:
+                    print "error: Discussion Entry Id invalid"
+                    respCode = 400
+                    abort(400, respCode)
+            except:
+                print "error in adding discussion: ", sys.exc_value()
+                respCode = 500
+                abort(500, respCode)
+        else:
+            print "Error: Either course is not present or no more offered"
+            respCode = 404
+            abort(404, respCode)
 
 
     #
     #Get Discussion
     #
-    def getDiscussion(self, discussionId):
-        print "Get discussion with discussion ID = " + discussionId
-        checkDiscussionEntry = self.dc.find({"id": discussionId.strip("'")}).count()
-        print "Discussion entry ", checkDiscussionEntry
-        if checkDiscussionEntry > 0:
-            print "Sending the Discussion Details"
-            discussionDetails = self.dc.find_one({"id": discussionId})
-            if len(discussionDetails) > 0:
-                print "send discussion details"
-                del discussionDetails['_id']
-                return discussionDetails
-            else:
-                return {"discussionId": "Discussion not found"}
-        else:
-            print "Error in Getting discussion details ---> mongo.py"
-            return {"discussionId": "ID is invalid"}
+    def getDiscussion(self, courseId):
+        print "Get discussions with course id = " + courseId
 
+        # splitting the announcement Id to get the Team name and announcement id in string format
+        splitCourseId = courseId.split(":")
 
-    #
-    # List all Discussion
-    #
-    def listDiscussion(self):
-        print "List all discussions ---- Mongo.py"
+        courseObjId = splitCourseId[1]
+        Team = splitCourseId[0]
+
+        from bson.objectid import ObjectId
         try:
-            discussionList = self.dc.find()
-            discussionListData = []
-            for data in discussionList:
-                del data['_id']
-                discussionListData.append(data)
-            #print "course list Array format", courseListData
-            discussionListFinal = json.dumps(discussionListData)
-            print "Final discussion list JSON format", discussionListFinal
-            return discussionListFinal
+            courseObjectId = ObjectId(courseObjId)
         except:
-            print "error to get discussion list details", sys.exc_info()[0]
-            return {"listDiscussions": "list retrieval failed"}
+            print "Error: Id is invalid", sys.exc_traceback()
+            respcode = 400
+            abort(400, respcode)
+
+        checkCourseEntry = self.cc.find({'_id': courseObjectId}).count()
+        if checkCourseEntry > 0:
+            print "Course is currently active online"
+            courseDiscussionList = self.dc.find({'courseId': courseId})
+            if courseDiscussionList > 0:
+                print "Sending the discussion list of course Id", courseId
+                del courseDiscussionList['_id']
+                print courseDiscussionList
+                return courseDiscussionList
+            else:
+                print "Error: 500 Internal Server error in get discussion----> mongo.py"
+                respcode = 500
+                abort(500, respcode)
+        else:
+            print "Error: course Id Not Found ---> mongo.py"
+            respcode = 404
+            abort(404, respcode)
 
     #
     # Delete Discussion
