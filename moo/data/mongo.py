@@ -31,30 +31,30 @@ class Storage(object):
         #self.userid = self.uc.count() + 1
         #self.rc = db.runCommand
 
-    def insert(self,entity):
-        print "---> insert:"
-        try:
-            self.uc.insert(entity)
-            return "added"
-        except:
-            return "error: data not added"
+    #def insert(self,entity):
+    #    print "---> insert:"
+    #    try:
+    #        self.uc.insert(entity)
+    #        return "added"
+    #    except:
+    #        return "error: data not added"
 
-    def remove(self,name):
-        self.uc.remove({ "email" : "test@gmail.com"})
-        print "---> remove:",name
+    #def remove(self,name):
+    #    self.uc.remove({ "email" : "test@gmail.com"})
+    #    print "---> remove:",name
 
-    def names(self):
-        print "---> names:"
-        for user in self.uc.find():
-            print user
+    #def names(self):
+    #    print "---> names:"
+    #    for user in self.uc.find():
+    #        print user
 
-    def find(self,name):
-        print "---> storage.find:",name
-        count = self.uc.find({"email":"test@gmail.com"}).count()
-        if count > 0:
-            return {"found" :"true"}
-        else :
-            return {"found" :"false"}
+    #def find(self,name):
+    #    print "---> storage.find:",name
+    #    count = self.uc.find({"email":"test@gmail.com"}).count()
+    #    if count > 0:
+    #        return {"found" :"true"}
+    #    else :
+    #        return {"found" :"false"}
 
     #_________________________________________________________________________________________________
 
@@ -142,28 +142,29 @@ class Storage(object):
     #
     # Update User
     #
-    def updateUser(self, jsonObj, email):
-        print "update user functions ---- mongo.py"
-        EntryType = "enrolled"
-        if self.uc.find({"enrolled": jsonObj['courseId'].strip("'")}):
-            # EntryType = "enrolled"
-            print "enroll the user and go into updateUser_CourseEntry function"
-            jsonResp = Storage.updateUser_CourseEntry(self, jsonObj, EntryType)
-            return jsonResp
-        elif EntryType == "dropEnrolledCourse":
-            print "Drop the course"
-            jsonResp = Storage.updateUser_CourseEntry(self, jsonObj, EntryType)
-            return jsonResp
+    #def updateUser(self, jsonObj, email):
+    #    print "update user functions ---- mongo.py"
+    #    EntryType = "enrolled"
+    #    if self.uc.find({"enrolled": jsonObj['courseId'].strip("'")}):
+    #        # EntryType = "enrolled"
+    #        print "enroll the user and go into updateUser_CourseEntry function"
+    #        jsonResp = Storage.updateUser_CourseEntry(self, jsonObj, EntryType)
+    #        return jsonResp
+    #   elif EntryType == "dropEnrolledCourse":
+    #       print "Drop the course"
+    #       jsonResp = Storage.updateUser_CourseEntry(self, jsonObj, EntryType)
+    #       return jsonResp
 
 
 
     #
-    # Update User .................... This will be used to Enroll Course Id, Update Own Course Id or Quiz Details
-    # It also handles requests to drop enrolled and added course and also delete quiz entries
-    # need to test if the user is already enrolled or added the class.
+    # Update User .................... This will be used to Enroll Course Id, Own Course Id or Quiz Details
+    # It also handles requests to drop enrolled and added course
+    #
     #
     # return JSON with success true or success false when user is already enrolled in the course
     # jsonObj has email and courseId
+    # argument EntryType is passed from the function which calls this functions for services.
 
     def updateUser_CourseEntry(self, jsonObj, EntryType):
         print "Updating the user details -> mongo.py", jsonObj['email']
@@ -1038,7 +1039,7 @@ class Storage(object):
 
     #
     # Add Discussion
-    #
+    # JSon expected from front end is given below
     # {
     # "course_id": "Rangers:519057591d41c8248488584c",
     # "title": "When will be the final Exam?",

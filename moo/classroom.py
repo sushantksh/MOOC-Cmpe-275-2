@@ -52,27 +52,27 @@ class Room(object):
     #
     # example: find data
     #
-    def find(self,name):
-        print '---> classroom.find:',name
-        return self.__store.find(name)
+    #def find(self,name):
+    #    print '---> classroom.find:',name
+    #    return self.__store.find(name)
 
     #
     # example: remove data
     #
-    def remove(self,name):
-        print '---> classroom.remove:',name
-        return self.__store.remove(name)
+    #def remove(self,name):
+    #    print '---> classroom.remove:',name
+    #    return self.__store.remove(name)
 
     #
     # example: add data
     #
-    def add(self,entity):
-        try:
-            self.__store.insert(entity)
-            self.__store.names();
-            return 'success'
-        except:
-            return 'failed'
+    #ef add(self,entity):
+    #   try:
+    #        self.__store.insert(entity)
+    #        self.__store.names();
+    #        return 'success'
+    #    except:
+    #       return 'failed'
 
             # TODO success|failure
 
@@ -204,44 +204,56 @@ class Room(object):
         return self.__store.deleteCourse(id)
 
     # ___________________________________________ QUIZZES ___________________________________________
+
     #
     # Add Quiz
     #
+
     def addQuiz(self, jsonObj):
         print "Room to storage ------> add quiz"
         return self.__store.addQuiz(jsonObj)
+
+
     #
     #Get Quiz
     #
+
     def getQuiz(self, quizId):
         print "room to stroage ------> Get Quiz"
         return self.__store.getQuiz(quizId)
 
+
     #
     #List Quiz
     #
+
     def listQuiz(self):
         print "room to storage ------> List Quiz"
         return self.__store.listQuiz()
 
+
     #
     # Delete Quiz
     #
+
     def deleteQuiz(self, id):
         print "delete Quiz moo.py"
         return self.__store.deleteQuiz(id)
 
 
     # ___________________________________________ ANNOUNCEMENTS ___________________________________________
+
     #
     # Add Announcement
     #
+
     def addAnnouncement(self, jsonObj):
         print "Room to storage ------> add announcement"
         return self.__store.addAnnouncement(jsonObj)
     #
     #Get Announcement
     #
+
     def getAnnouncement(self, announcementId):
         print "room to stroage ------> Get Announcement"
         return self.__store.getAnnouncement(announcementId)
@@ -249,6 +261,7 @@ class Room(object):
     #
     #List Announcement
     #
+
     def listAnnouncement(self):
         print "room to storage ------> List Announcement"
         return self.__store.listAnnouncement()
@@ -256,6 +269,7 @@ class Room(object):
     #
     # Delete Announcement
     #
+
     def deleteAnnouncement(self, id):
         print "delete Announcement moo.py"
         return self.__store.deleteAnnouncement(id)
@@ -263,33 +277,28 @@ class Room(object):
 
 
     # ___________________________________________ DISCUSSIONS ___________________________________________
+
     #
     # Add Discussion
     #
+
     def addDiscussion(self, jsonObj):
         print "Room to storage ------> add Discussion"
         return self.__store.addDiscussion(jsonObj)
+
+
     #
     #Get Discussion
     #
+
     def getDiscussion(self, discussionId):
         print "room to stroage ------> Get Discussion"
         return self.__store.getDiscussion(discussionId)
 
     #
-    #List Discussion
-    #
-    def listDiscussion(self):
-        try:
-            print "room to storage ------> List Discussion"
-            return self.__store.listDiscussion()
-        except:
-            print "Error in  listing Discussion details ---> classroom.py"
-            return {"errorInQuery": "listDiscussion"}
-
-    #
     # Delete Discussion
     #
+
     def deleteDiscussion(self, id):
         print "delete Discussion moo.py"
         return self.__store.deleteDiscussion(id)

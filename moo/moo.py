@@ -71,7 +71,6 @@ def echo(msg):
    if fmt == Room.html:
       return '<h1>%s</h1>' % msg
    elif fmt == Room.json:
-      rsp = {}
       rsp["msg"] = msg
       return json.dumps(all)
    else:
@@ -81,38 +80,38 @@ def echo(msg):
 #
 # example of a RESTful query
 #
-@route('/moo/data/:name', method='GET')
-def find(name):
-   print '---> moo.find:',name
-   return room.find(name)
+#@route('/moo/data/:name', method='GET')
+#def find(name):
+#   print '---> moo.find:',name
+#   return room.find(name)
 
 #
 # example of a RESTful query
 #
-@route('/moo/data/:name', method='DELETE')
-def remove(name):
-   print '---> moo.remove:',name
-   return room.remove(name)
+#@route('/moo/data/:name', method='DELETE')
+#def remove(name):
+#  print '---> moo.remove:',name
+#  return room.remove(name)
 
 #
 # example adding data using forms
 #
-@route('/moo/data', method='POST')
-def add():
-   print '---> moo.add'
+#@route('/moo/data', method='POST')
+#def add():
+#   print '---> moo.add'
 
    # example list form values
-   for k,v in request.forms.allitems():
-      print "form:",k,"=",v
-   data = request.body.readline()
-   if not data:
-       abort(400, 'No data received')
-   entity = json.loads(data)
-   if not entity.has_key('_id'):
-       abort(400, 'No _id specified')
+#   for k,v in request.forms.allitems():
+#      print "form:",k,"=",v
+#   data = request.body.readline()
+#   if not data:
+#       abort(400, 'No data received')
+#   entity = json.loads(data)
+#   if not entity.has_key('_id'):
+#       abort(400, 'No _id specified')
    #name = request.forms.get('name')
    #value = request.forms.get('value')
-   return room.add(entity)
+#   return room.add(entity)
 
 #____________________________________________________________________________________________________
 # example sign in for user
@@ -121,19 +120,26 @@ def add():
 #
 # Checks if the user is present or not, if not returns a error and if present display shows.html
 
-@route('/user/auth', method='POST')
-def login():
-   print '---> Checking User is present or not!!'
-   k = request.forms.allitems()
-   print "I am in LogIn function of moo.py"
-   for key, value in k:
-      data = json.loads(key)
-      print str(data)
+#@route('/user/auth', method='POST')
+#def login():
+#   print '---> Checking User is present or not!!'
+#   k = request.forms.allitems()
+#   print "I am in LogIn function of moo.py"
+#   for key, value in k:
+#      data = json.loads(key)
+#      print str(data)
 
    # example list form values
-   return room.signIn(data['email'], data['pwd'])
+#   return room.signIn(data['email'], data['pwd'])
 
-#_______________________________________ User collection _______________________________________________
+
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
+#-------------------------------------------- TEAM RANGERS CODE-----------------------------------------#
+
+#_____________________________________________User collection ___________________________________________
+
 #
 # Create User
 #
